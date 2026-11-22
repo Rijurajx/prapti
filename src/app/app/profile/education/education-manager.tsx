@@ -255,7 +255,7 @@ function EducationRecordForm({
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<EducationRecordInput>({
-    resolver: zodResolver(educationRecordSchema),
+    resolver: zodResolver(educationRecordSchema, undefined, { raw: true }),
     defaultValues,
   });
 

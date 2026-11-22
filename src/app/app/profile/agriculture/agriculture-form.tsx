@@ -59,7 +59,7 @@ export function AgricultureForm({ initial }: { initial: AgriculturalProfile }) {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<AgriculturalProfileInput>({
-    resolver: zodResolver(agriculturalProfileSchema),
+    resolver: zodResolver(agriculturalProfileSchema, undefined, { raw: true }),
     defaultValues: {
       occupationTypes: initial.occupationTypes,
       landholdingArea: initial.landholdingArea ?? '',

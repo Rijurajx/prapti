@@ -44,7 +44,7 @@ export function FinanceForm({ initial }: { initial: FinancialProfile }) {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FinancialProfileInput>({
-    resolver: zodResolver(financialProfileSchema),
+    resolver: zodResolver(financialProfileSchema, undefined, { raw: true }),
     defaultValues: {
       annualIncomeInr: initial.annualIncomeInr ?? '',
       familyAnnualIncomeInr: initial.familyAnnualIncomeInr ?? '',
