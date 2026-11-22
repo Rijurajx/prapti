@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ArrowRight,
   ShieldCheck,
@@ -10,7 +11,6 @@ import {
   Layers,
   ChevronRight,
 } from 'lucide-react';
-import { IndiaMapAscii } from '@/components/india-map-ascii';
 
 export default function HomePage() {
   return (
@@ -110,9 +110,16 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right Column: ASCII Scanline India Map */}
+            {/* Right Column: India ASCII Art */}
             <div className="lg:col-span-5 flex justify-center lg:justify-end">
-              <IndiaMapAscii />
+              <Image
+                src="/india_ascii.png"
+                alt="India ASCII Art"
+                width={1286}
+                height={1223}
+                priority
+                className="w-full max-w-md lg:max-w-lg h-auto object-contain select-none pointer-events-none"
+              />
             </div>
           </div>
         </section>
