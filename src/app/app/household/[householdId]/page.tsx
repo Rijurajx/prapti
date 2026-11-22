@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { Relationship } from '@/lib/validation/household';
@@ -57,7 +58,15 @@ export default async function HouseholdDetailPage({
   const consents = await getMyConsents(householdId);
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 space-y-6">
+      <div>
+        <Link
+          href="/app/dashboard?tab=household"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-bold uppercase tracking-wider"
+        >
+          ← Return to Household Workspace
+        </Link>
+      </div>
       <PageHeader title={household.name} description="Who is in this household, and what you share." />
 
       <Card>

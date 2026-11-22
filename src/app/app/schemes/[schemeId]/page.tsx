@@ -57,14 +57,14 @@ export default async function SchemeDetailPage({
   );
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 space-y-6">
       {/* Back button */}
       <div>
         <Link
-          href="/app/schemes"
-          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+          href="/app/dashboard?tab=schemes"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-bold uppercase tracking-wider"
         >
-          ← Back to schemes directory
+          ← Return to Dashboard Schemes
         </Link>
       </div>
 

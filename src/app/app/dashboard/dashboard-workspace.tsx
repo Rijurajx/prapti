@@ -1,0 +1,1114 @@
+'use client';
+
+import { useState, useEffect, useTransition } from 'react';
+import Link from 'next/link';
+import {
+  LayoutDashboard,
+  Sparkles,
+  Search,
+  Bookmark,
+  Clock,
+  Bell,
+  User,
+  GraduationCap,
+  Briefcase,
+  Sprout,
+  FolderLock,
+  Bot,
+  BookOpen,
+  HelpCircle,
+  Users,
+  ShieldCheck,
+  Settings,
+  ChevronDown,
+  ChevronRight,
+  LogOut,
+  ExternalLink,
+  CheckCircle2,
+  AlertCircle,
+  ArrowRight,
+  Menu,
+  X,
+  FileText,
+  Calendar,
+  Trash2,
+  Check,
+  Plus,
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { signOut } from '@/app/auth/actions';
+import { OpportunityCard } from '@/app/app/opportunities/opportunity-card';
+import { ClaimCard } from '@/app/app/applications/claim-card';
+import { RemindersView } from '@/app/app/reminders/reminders-view';
+import { AssistantChat } from '@/app/app/assistant/assistant-chat';
+import { ExportDataButton } from '@/app/app/privacy/export-data-button';
+import { PersonalDetailsForm } from '@/app/app/profile/personal/personal-form';
+import { AddressForm } from '@/app/app/profile/address/address-form';
+import { FinanceForm } from '@/app/app/profile/finance/finance-form';
+import { EmploymentForm } from '@/app/app/profile/employment/employment-form';
+import { EducationManager } from '@/app/app/profile/education/education-manager';
+import { AgricultureForm } from '@/app/app/profile/agriculture/agriculture-form';
+import { DocumentsForm, type DocumentRow } from '@/app/app/profile/documents/documents-form';
+import { CreateHouseholdForm } from '@/app/app/household/household-forms';
+import { updateUserSettings } from '@/app/app/settings/actions';
+import type { PersonalizedOpportunities } from '@/services/matching';
+
+interface NavSubItem {
+  id: string;
+  label: string;
+  icon: any;
+  badge?: string | number;
+  badgeTone?: 'neutral' | 'success' | 'warning' | 'info';
+}
+
+interface NavCategory {
+  id: string;
+  title: string;
+  items: NavSubItem[];
+}
+
+interface DashboardWorkspaceProps {
+  user: { id: string; email?: string; full_name?: string; preferred_language?: string };
+  citizenId: string;
+  initialTab?: string;
+  opportunities: PersonalizedOpportunities;
+  schemes: any[];
+  savedSchemes: any[];
+  claims: any[];
+  reminders: any[];
+  personalDetails: any;
+  addresses: any;
+  financialProfile: any;
+  employmentProfile: any;
+  educationRecords: any[];
+  agriculturalProfile: any;
+  documentRows: DocumentRow[];
+  households: any[];
+}
+
+export function DashboardWorkspace({
+  user,
+  citizenId,
+  initialTab = 'overview',
+  opportunities,
+  schemes,
+  savedSchemes,
+  claims,
+  reminders,
+  personalDetails,
+  addresses,
+  financialProfile,
+  employmentProfile,
+  educationRecords,
+  agriculturalProfile,
+  documentRows,
+  households,
+}: DashboardWorkspaceProps) {
+  const [activeTab, setActiveTab] = useState<string>(initialTab);
+  const [selectedSchemeId, setSelectedSchemeId] = useState<string | null>(null);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({
+    overview: true,
+    schemes: true,
+    profile: true,
+    applications: true,
+    ai: true,
+    household: true,
+  });
+
+  // Keep state in sync with URL without page reload
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tabParam = urlParams.get('tab');
+      if (tabParam) {
+        setActiveTab(tabParam);
+      }
+    }
+  }, []);
+
+  const switchTab = (tabId: string) => {
+    setActiveTab(tabId);
+    setSelectedSchemeId(null);
+    setMobileSidebarOpen(false);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', tabId);
+      window.history.pushState({}, '', url.toString());
+    }
+  };
+
+  const toggleCategory = (catId: string) => {
+    setOpenCategories((prev) => ({ ...prev, [catId]: !prev[catId] }));
+  };
+
+  const eligibleCount = opportunities.likelyEligible.length;
+  const needsInfoCount = opportunities.needsMoreInfo.length;
+  const readyDocsCount = documentRows.filter((d) => d.status === 'available').length;
+  const totalDocsCount = documentRows.length;
+
+  const categories: NavCategory[] = [
+    {
+      id: 'overview',
+      title: 'OVERVIEW & MATCHES',
+      items: [
+        { id: 'overview', label: 'Dashboard Summary', icon: LayoutDashboard },
+        {
+          id: 'opportunities',
+          label: 'My Opportunities',
+          icon: Sparkles,
+          badge: eligibleCount > 0 ? `${eligibleCount} ELIGIBLE` : undefined,
+          badgeTone: 'success',
+        },
+      ],
+    },
+    {
+      id: 'schemes',
+      title: 'SCHEMES & CLAIMS',
+      items: [
+        { id: 'schemes', label: 'Discover Schemes', icon: Search, badge: schemes.length },
+        {
+          id: 'saved',
+          label: 'Saved Schemes',
+          icon: Bookmark,
+          badge: savedSchemes.length > 0 ? savedSchemes.length : undefined,
+        },
+        {
+          id: 'applications',
+          label: 'Tracked Claims & Tasks',
+          icon: Clock,
+          badge: claims.length > 0 ? claims.length : undefined,
+        },
+        {
+          id: 'reminders',
+          label: 'Deadlines & Reminders',
+          icon: Bell,
+          badge: reminders.filter((r) => !r.is_dismissed).length || undefined,
+        },
+      ],
+    },
+    {
+      id: 'profile',
+      title: 'CITIZEN PROFILE',
+      items: [
+        { id: 'profile_personal', label: 'Personal & Address', icon: User },
+        { id: 'profile_education', label: 'Education Records', icon: GraduationCap },
+        { id: 'profile_finance', label: 'Finance & Work', icon: Briefcase },
+        { id: 'profile_agriculture', label: 'Agriculture Profile', icon: Sprout },
+        {
+          id: 'profile_documents',
+          label: 'Document Inventory',
+          icon: FolderLock,
+          badge: `${readyDocsCount}/${totalDocsCount}`,
+        },
+      ],
+    },
+    {
+      id: 'ai',
+      title: 'AI & GUIDANCE',
+      items: [
+        { id: 'assistant', label: 'AI Benefits Assistant', icon: Bot, badge: 'GEMINI' },
+        { id: 'guides', label: 'Certificate Guides', icon: BookOpen },
+        { id: 'help', label: 'Helplines & FAQs', icon: HelpCircle },
+      ],
+    },
+    {
+      id: 'household',
+      title: 'HOUSEHOLD & PRIVACY',
+      items: [
+        { id: 'household', label: 'Household Workspace', icon: Users, badge: households.length || undefined },
+        { id: 'privacy', label: 'Privacy & Data Export', icon: ShieldCheck },
+        { id: 'settings', label: 'Preferences', icon: Settings },
+      ],
+    },
+  ];
+
+  // Selected scheme detail object if scheme is selected
+  const activeSchemeDetail = selectedSchemeId
+    ? schemes.find((s) => s.id === selectedSchemeId)
+    : null;
+
+  const firstName = user.full_name?.split(' ')[0] ?? 'CITIZEN';
+
+  return (
+    <div className="flex h-screen w-full overflow-hidden bg-background text-foreground font-mono">
+      {/* Mobile Sidebar Overlay */}
+      {mobileSidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setMobileSidebarOpen(false)}
+        />
+      )}
+
+      {/* Left Sidebar */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-border bg-card transition-transform duration-200 lg:static lg:translate-x-0 ${
+          mobileSidebarOpen ? 'translate-x-0' : '-translate-x-0 max-lg:-translate-x-full'
+        }`}
+      >
+        {/* Brand Bar */}
+        <div className="flex h-14 items-center justify-between border-b border-border px-4">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-0.5">
+              <span className="inline-block h-3 w-3 bg-foreground" />
+              <div className="flex flex-col gap-0.5">
+                <span className="inline-block h-1 w-1 bg-foreground" />
+                <span className="inline-block h-1 w-1 bg-foreground" />
+              </div>
+            </div>
+            <Link href="/" className="font-pixel text-sm font-bold tracking-tight text-foreground">
+              PRAPTI
+            </Link>
+            <span className="text-[10px] text-muted-foreground ml-1">v1.1</span>
+          </div>
+
+          <button
+            type="button"
+            className="lg:hidden text-muted-foreground hover:text-foreground"
+            onClick={() => setMobileSidebarOpen(false)}
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Sidebar Nav with Accordion Categories */}
+        <div className="flex-1 overflow-y-auto px-2 py-3 space-y-4">
+          {categories.map((cat) => {
+            const isOpen = openCategories[cat.id] ?? true;
+
+            return (
+              <div key={cat.id} className="space-y-1">
+                {/* Category Header (collapsible) */}
+                <button
+                  type="button"
+                  onClick={() => toggleCategory(cat.id)}
+                  className="flex w-full items-center justify-between px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <span>{'//'} {cat.title}</span>
+                  {isOpen ? (
+                    <ChevronDown className="h-3 w-3" />
+                  ) : (
+                    <ChevronRight className="h-3 w-3" />
+                  )}
+                </button>
+
+                {/* Sub-options */}
+                {isOpen && (
+                  <div className="space-y-0.5 pt-0.5">
+                    {cat.items.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = activeTab === item.id && !selectedSchemeId;
+
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => switchTab(item.id)}
+                          className={`flex w-full items-center justify-between px-3 py-2 text-xs rounded-[3px] transition-all text-left ${
+                            isActive
+                              ? 'bg-foreground text-background font-semibold shadow-sm'
+                              : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 truncate">
+                            <Icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-background' : 'text-muted-foreground'}`} />
+                            <span className="truncate">{item.label}</span>
+                          </div>
+
+                          {item.badge !== undefined && (
+                            <span
+                              className={`rounded px-1.5 py-0.2 text-[9px] font-bold uppercase tracking-tight ${
+                                isActive
+                                  ? 'bg-background text-foreground'
+                                  : item.badgeTone === 'success'
+                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                                  : 'bg-muted text-muted-foreground'
+                              }`}
+                            >
+                              {item.badge}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* User Footer in Sidebar */}
+        <div className="border-t border-border p-3 bg-muted/20 text-xs">
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+            <span className="truncate font-medium text-foreground">{user.full_name || 'Citizen'}</span>
+            <span className="text-[10px] uppercase">WB_NODE</span>
+          </div>
+          <div className="mt-2 flex items-center justify-between pt-2 border-t border-border/60">
+            <button
+              type="button"
+              onClick={() => switchTab('assistant')}
+              className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
+            >
+              <Bot className="h-3 w-3" /> AI Assistant
+            </button>
+            <form action={signOut}>
+              <button
+                type="submit"
+                className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-rose-600 transition-colors"
+              >
+                <LogOut className="h-3 w-3" /> Sign Out
+              </button>
+            </form>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {/* Redesigned Header */}
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card/60 backdrop-blur-sm px-4 sm:px-6">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              className="lg:hidden text-foreground hover:text-muted-foreground"
+              onClick={() => setMobileSidebarOpen(true)}
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+
+            {/* Monospace telemetry breadcrumb */}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="hidden sm:inline font-bold text-foreground">PRAPTI</span>
+              <span className="hidden sm:inline">{'//'}</span>
+              <span className="font-semibold text-foreground uppercase">
+                {selectedSchemeId
+                  ? 'SCHEME_INSPECTOR'
+                  : activeTab.replace('profile_', 'PROFILE_').replace('_', ' ').toUpperCase()}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 text-xs">
+            {/* Live Eligibility Badge */}
+            {eligibleCount > 0 && (
+              <button
+                type="button"
+                onClick={() => switchTab('opportunities')}
+                className="hidden sm:inline-flex items-center gap-1.5 rounded border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"
+              >
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                {eligibleCount} LIKELY ELIGIBLE
+              </button>
+            )}
+
+            <div className="hidden md:flex items-center gap-1 text-muted-foreground text-[11px]">
+              <span>[ USER: {firstName} ]</span>
+            </div>
+
+            <form action={signOut}>
+              <Button type="submit" variant="ghost" size="sm" className="h-8 text-xs">
+                <LogOut className="h-3.5 w-3.5 sm:mr-1" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </Button>
+            </form>
+          </div>
+        </header>
+
+        {/* Dynamic Main Pane (SPA component loader without page reload) */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+          {/* 1. If Scheme Detail is selected, show in-pane inspector */}
+          {activeSchemeDetail ? (
+            <div className="space-y-6 max-w-4xl">
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSchemeId(null)}
+                  className="inline-flex items-center gap-1 text-xs text-primary font-medium hover:underline"
+                >
+                  ← Back to schemes directory
+                </button>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 text-xs uppercase text-muted-foreground">
+                    <Badge tone="neutral">
+                      {activeSchemeDetail.jurisdiction === 'central'
+                        ? 'Central Scheme'
+                        : activeSchemeDetail.state ?? 'West Bengal'}
+                    </Badge>
+                    <span>•</span>
+                    <span className="capitalize">{activeSchemeDetail.category}</span>
+                  </div>
+
+                  <h1 className="text-2xl font-bold tracking-tight text-foreground mt-2">
+                    {activeSchemeDetail.name}
+                  </h1>
+                  {activeSchemeDetail.name_bn && (
+                    <p className="font-bengali text-base text-muted-foreground mt-0.5">
+                      {activeSchemeDetail.name_bn}
+                    </p>
+                  )}
+                  {activeSchemeDetail.ministry_label && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {activeSchemeDetail.ministry_label}
+                    </p>
+                  )}
+                </div>
+
+                {activeSchemeDetail.portal_url && (
+                  <a
+                    href={activeSchemeDetail.portal_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-[3px] bg-foreground px-4 py-2 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shrink-0"
+                  >
+                    Official Portal <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                )}
+              </div>
+
+              {activeSchemeDetail.short_description && (
+                <div className="rounded border border-border bg-card p-4 text-xs text-muted-foreground leading-relaxed">
+                  {activeSchemeDetail.short_description}
+                </div>
+              )}
+            </div>
+          ) : activeTab === 'overview' ? (
+            /* =========================================================================
+               TAB: OVERVIEW
+            ========================================================================= */
+            <div className="space-y-6 max-w-5xl">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  Citizen Benefits Workspace
+                </h1>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Deterministic scheme matching based on verified government rules and your personal circumstances.
+                </p>
+              </div>
+
+              {eligibleCount > 0 && (
+                <div className="rounded border border-border bg-card p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <Sparkles className="h-5 w-5 text-foreground" />
+                      <div>
+                        <p className="font-bold text-sm text-foreground">
+                          {eligibleCount} Likely Eligible {eligibleCount === 1 ? 'Scheme' : 'Schemes'} Discovered
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          All published criteria met against your recorded facts.
+                        </p>
+                      </div>
+                    </div>
+                    <Button size="sm" onClick={() => switchTab('opportunities')}>
+                      View Opportunities <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* KPI Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                <Card className="hover:border-foreground transition-colors cursor-pointer" onClick={() => switchTab('opportunities')}>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span className="font-semibold uppercase tracking-wider">Eligible Matches</span>
+                      <Sparkles className="h-4 w-4" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-foreground">{eligibleCount}</div>
+                    <p className="text-muted-foreground mt-1">
+                      {needsInfoCount > 0 ? `+${needsInfoCount} need more details` : 'Criteria satisfied'}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="hover:border-foreground transition-colors cursor-pointer" onClick={() => switchTab('profile_documents')}>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span className="font-semibold uppercase tracking-wider">Document Readiness</span>
+                      <FolderLock className="h-4 w-4" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-foreground">{readyDocsCount}</div>
+                    <p className="text-muted-foreground mt-1">
+                      {readyDocsCount} of {totalDocsCount} documents available
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="hover:border-foreground transition-colors cursor-pointer" onClick={() => switchTab('applications')}>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span className="font-semibold uppercase tracking-wider">Tracked Claims</span>
+                      <Clock className="h-4 w-4" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-foreground">{claims.length}</div>
+                    <p className="text-muted-foreground mt-1">
+                      {claims.length === 0 ? 'No active claims' : 'In preparation / submitted'}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="hover:border-foreground transition-colors cursor-pointer" onClick={() => switchTab('reminders')}>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span className="font-semibold uppercase tracking-wider">Reminders</span>
+                      <Bell className="h-4 w-4" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-foreground">
+                      {reminders.filter((r) => !r.is_dismissed).length}
+                    </div>
+                    <p className="text-muted-foreground mt-1">Pending deadlines & follow-ups</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Quick Launchpad */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-bold">Profile Readiness</CardTitle>
+                    <CardDescription className="text-xs">
+                      Keep your facts up to date to ensure accurate deterministic evaluation.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-xs">
+                    {[
+                      { label: 'Personal & Age Details', done: Boolean(personalDetails?.dateOfBirth), tab: 'profile_personal' },
+                      { label: 'Residential Domicile', done: Boolean(addresses?.current?.state), tab: 'profile_personal' },
+                      { label: 'Family Annual Income', done: Boolean(financialProfile?.family_annual_income_inr), tab: 'profile_finance' },
+                      { label: 'Education Records', done: educationRecords.length > 0, tab: 'profile_education' },
+                      { label: 'Document Inventory', done: readyDocsCount > 0, tab: 'profile_documents' },
+                    ].map((step) => (
+                      <div key={step.label} className="flex items-center justify-between p-2 rounded bg-muted/30">
+                        <div className="flex items-center gap-2">
+                          {step.done ? (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4 text-amber-500" />
+                          )}
+                          <span className={step.done ? 'text-foreground' : 'text-muted-foreground'}>
+                            {step.label}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => switchTab(step.tab)}
+                          className="text-xs font-semibold text-primary hover:underline"
+                        >
+                          {step.done ? 'Edit' : 'Add'}
+                        </button>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-bold">AI Natural Language Assistant</CardTitle>
+                    <CardDescription className="text-xs">
+                      Tell our AI assistant your life story in English or Bengali to extract profile facts.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-xs">
+                    <p className="text-muted-foreground leading-relaxed">
+                      &quot;I am an 18-year-old student from Nadia, West Bengal, completed Class 12 with 82%, family income ₹1.1 lakh.&quot;
+                    </p>
+                    <Button size="sm" onClick={() => switchTab('assistant')}>
+                      <Bot className="mr-1.5 h-3.5 w-3.5" /> Open AI Assistant
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          ) : activeTab === 'opportunities' ? (
+            /* =========================================================================
+               TAB: OPPORTUNITIES
+            ========================================================================= */
+            <div className="space-y-6 max-w-4xl">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  My Opportunities
+                </h1>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Evaluated using deterministic Kleene 3-valued logic against verified government scheme rules.
+                </p>
+              </div>
+
+              {opportunities.likelyEligible.length === 0 &&
+              opportunities.needsMoreInfo.length === 0 &&
+              opportunities.likelyIneligible.length === 0 ? (
+                <div className="rounded border border-border p-8 text-center space-y-3">
+                  <Sparkles className="mx-auto h-6 w-6 text-muted-foreground" />
+                  <p className="text-sm font-semibold">No scheme results yet</p>
+                  <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                    Add your educational marks, family income, and address in the Citizen Profile tabs to see matches.
+                  </p>
+                  <Button size="sm" onClick={() => switchTab('profile_personal')}>
+                    Update Profile
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {opportunities.likelyEligible.map((opp) => (
+                    <OpportunityCard key={opp.schemeId} opportunity={opp} />
+                  ))}
+                  {opportunities.needsMoreInfo.map((opp) => (
+                    <OpportunityCard key={opp.schemeId} opportunity={opp} />
+                  ))}
+                  {opportunities.likelyIneligible.map((opp) => (
+                    <OpportunityCard key={opp.schemeId} opportunity={opp} />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : activeTab === 'schemes' ? (
+            /* =========================================================================
+               TAB: DISCOVER SCHEMES
+            ========================================================================= */
+            <div className="space-y-6 max-w-4xl">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  Scheme Registry
+                </h1>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Browse official state and central benefit schemes. Click any scheme to inspect rules and documents.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {schemes.map((s) => (
+                  <Card
+                    key={s.id}
+                    className="flex flex-col justify-between hover:border-foreground transition-colors cursor-pointer"
+                    onClick={() => setSelectedSchemeId(s.id)}
+                  >
+                    <CardHeader>
+                      <div className="flex items-center gap-2 text-[10px] uppercase text-muted-foreground">
+                        <span className="font-semibold text-foreground">
+                          {s.jurisdiction === 'central' ? 'Central' : s.state ?? 'West Bengal'}
+                        </span>
+                        <span>•</span>
+                        <span className="capitalize">{s.category}</span>
+                      </div>
+                      <CardTitle className="text-base mt-1">{s.name}</CardTitle>
+                      {s.name_bn && (
+                        <p className="font-bengali text-xs text-muted-foreground">{s.name_bn}</p>
+                      )}
+                      {s.ministry_label && (
+                        <CardDescription className="text-[11px]">{s.ministry_label}</CardDescription>
+                      )}
+                    </CardHeader>
+                    <CardContent className="pt-0 space-y-3">
+                      <p className="line-clamp-2 text-xs text-muted-foreground">
+                        {s.short_description}
+                      </p>
+                      <div className="border-t border-border pt-2 flex items-center justify-between text-xs">
+                        <span className="text-primary font-semibold hover:underline">
+                          Inspect Rules & Steps →
+                        </span>
+                        {s.portal_url && (
+                          <span className="text-[10px] text-muted-foreground">Official Source Verified</span>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          ) : activeTab === 'saved' ? (
+            /* =========================================================================
+               TAB: SAVED SCHEMES
+            ========================================================================= */
+            <div className="space-y-6 max-w-4xl">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  Saved Schemes
+                </h1>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Schemes bookmarked for your personal application preparations.
+                </p>
+              </div>
+
+              {savedSchemes.length === 0 ? (
+                <div className="rounded border border-border p-8 text-center space-y-2">
+                  <Bookmark className="mx-auto h-6 w-6 text-muted-foreground" />
+                  <p className="text-sm font-semibold">No saved schemes</p>
+                  <p className="text-xs text-muted-foreground">
+                    Bookmark schemes in Discover Schemes to see them here.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {savedSchemes.map((item: any) => (
+                    <Card
+                      key={item.id}
+                      className="cursor-pointer hover:border-foreground"
+                      onClick={() => setSelectedSchemeId(item.schemes?.id)}
+                    >
+                      <CardHeader>
+                        <CardTitle className="text-base">{item.schemes?.name}</CardTitle>
+                        <CardDescription className="text-xs">{item.schemes?.short_description}</CardDescription>
+                      </CardHeader>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : activeTab === 'applications' ? (
+            /* =========================================================================
+               TAB: APPLICATIONS & CLAIMS
+            ========================================================================= */
+            <div className="space-y-6 max-w-4xl">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  Tracked Claims & Tasks
+                </h1>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Manage your official application preparation checklists, status changes, and reference IDs.
+                </p>
+              </div>
+
+              {claims.length === 0 ? (
+                <div className="rounded border border-border p-8 text-center space-y-3">
+                  <Clock className="mx-auto h-6 w-6 text-muted-foreground" />
+                  <p className="text-sm font-semibold">No tracked applications</p>
+                  <p className="text-xs text-muted-foreground">
+                    Click &quot;Track Application&quot; on any eligible opportunity to begin managing its checklist.
+                  </p>
+                  <Button size="sm" onClick={() => switchTab('opportunities')}>
+                    Find Opportunities
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {claims.map((claim) => (
+                    <ClaimCard key={claim.id} claim={claim} />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : activeTab === 'reminders' ? (
+            /* =========================================================================
+               TAB: REMINDERS
+            ========================================================================= */
+            <div className="space-y-6 max-w-4xl">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  Deadlines & Reminders
+                </h1>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Manage application deadlines, institutional submission dates, and Duare Sarkar camp visits.
+                </p>
+              </div>
+              <RemindersView reminders={reminders} />
+            </div>
+          ) : activeTab === 'assistant' ? (
+            /* =========================================================================
+               TAB: AI ASSISTANT
+            ========================================================================= */
+            <div className="space-y-6 max-w-4xl">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  AI Benefits Assistant
+                </h1>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Describe your personal circumstances naturally in English or Bengali. Facts are confirmed by you before saving.
+                </p>
+              </div>
+              <AssistantChat />
+            </div>
+          ) : activeTab === 'profile_personal' ? (
+            /* =========================================================================
+               TAB: PROFILE PERSONAL & ADDRESS
+            ========================================================================= */
+            <div className="space-y-6 max-w-3xl">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  Personal Details & Residential Address
+                </h1>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Used exclusively to evaluate age, gender, marital status, and state domicile eligibility rules.
+                </p>
+              </div>
+              <PersonalDetailsForm initial={personalDetails} />
+              <div className="pt-6 border-t border-border">
+                <AddressForm kind="current" initial={addresses?.current ?? null} />
+              </div>
+            </div>
+          ) : activeTab === 'profile_education' ? (
+            /* =========================================================================
+               TAB: PROFILE EDUCATION
+            ========================================================================= */
+            <div className="space-y-6 max-w-3xl">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  Education Records
+                </h1>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Record your secondary, higher secondary, diploma, and undergraduate marks for merit scholarships.
+                </p>
+              </div>
+              <EducationManager records={educationRecords} />
+            </div>
+          ) : activeTab === 'profile_finance' ? (
+            /* =========================================================================
+               TAB: PROFILE FINANCE & EMPLOYMENT
+            ========================================================================= */
+            <div className="space-y-6 max-w-3xl">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  Finance & Employment
+                </h1>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Record your annual family income and employment category.
+                </p>
+              </div>
+              <FinanceForm initial={financialProfile} />
+              <div className="pt-6 border-t border-border">
+                <EmploymentForm initial={employmentProfile} />
+              </div>
+            </div>
+          ) : activeTab === 'profile_agriculture' ? (
+            /* =========================================================================
+               TAB: PROFILE AGRICULTURE
+            ========================================================================= */
+            <div className="space-y-6 max-w-3xl">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  Agricultural Profile
+                </h1>
+                <p className="text-xs text-muted-foreground mt-1">
+                  For farmers, cultivators, and sharecroppers applying for Krishak Bandhu or PM-KISAN.
+                </p>
+              </div>
+              <AgricultureForm initial={agriculturalProfile} />
+            </div>
+          ) : activeTab === 'profile_documents' ? (
+            /* =========================================================================
+               TAB: PROFILE DOCUMENTS
+            ========================================================================= */
+            <div className="space-y-6 max-w-3xl">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  Document Readiness Inventory
+                </h1>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Record certificate possession. Aadhaar numbers or copies are NEVER requested or stored.
+                </p>
+              </div>
+              <DocumentsForm rows={documentRows} />
+            </div>
+          ) : activeTab === 'guides' ? (
+            /* =========================================================================
+               TAB: GUIDES
+            ========================================================================= */
+            <div className="space-y-6 max-w-4xl">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  Official Certificate Guides
+                </h1>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Procedures for obtaining essential West Bengal documents and certificates.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">West Bengal Domicile Certificate</CardTitle>
+                    <CardDescription className="text-xs">Required for SVMCM and state quotas.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-muted-foreground">
+                    <p>1. Apply online via e-District portal (edistrict.wb.gov.in) or SDO/BDO office.</p>
+                    <p>2. Provide residential tax receipt, school certificate, and birth proof.</p>
+                    <p>3. Digitally signed certificate issued within 7-15 business days.</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">SDO / BDO Income Certificate</CardTitle>
+                    <CardDescription className="text-xs">Required for income threshold evaluations.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-muted-foreground">
+                    <p>1. Obtain local Gram Panchayat Pradhan or Municipality income report.</p>
+                    <p>2. Upload to e-District portal with salary slip, IT return, or affidavit.</p>
+                    <p>3. Valid for the current financial year across all state schemes.</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">Aadhaar Bank DBT Linkage</CardTitle>
+                    <CardDescription className="text-xs">Crucial for receiving direct cash transfers.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-muted-foreground">
+                    <p>1. Visit your bank branch with passbook and Aadhaar copy.</p>
+                    <p>2. Fill in NPCI mandate form to map your account for DBT.</p>
+                    <p>3. Verify status on UIDAI portal under bank-seeding status.</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">Duare Sarkar Camp Guide</CardTitle>
+                    <CardDescription className="text-xs">Statewide outreach camps in West Bengal.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-muted-foreground">
+                    <p>1. Locate camp schedule at your local Gram Panchayat or Municipality.</p>
+                    <p>2. Carry photo, bank passbook copy, Aadhaar availability, and voter card.</p>
+                    <p>3. Retain stamped registration receipt with unique serial number.</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          ) : activeTab === 'help' ? (
+            /* =========================================================================
+               TAB: HELP & HELPLINES
+            ========================================================================= */
+            <div className="space-y-6 max-w-4xl">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  Helplines & Support
+                </h1>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Official government department telephone helpdesks and FAQs.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                {[
+                  { name: 'Banglar Sahayata Kendra (BSK)', number: '1800-345-0117', type: 'Toll Free' },
+                  { name: 'SVMCM Scholarship Helpdesk', number: '1800-102-8014', type: 'Toll Free' },
+                  { name: 'Krishak Bandhu Assistance', number: '8336957370 / 8336957371', type: 'Helpline' },
+                  { name: 'Kanyashree Support Desk', number: 'support.kanyashree@wb.gov.in', type: 'Email' },
+                ].map((h) => (
+                  <div key={h.name} className="rounded border border-border bg-card p-3 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-foreground">{h.name}</span>
+                      <span className="text-[9px] uppercase bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
+                        {h.type}
+                      </span>
+                    </div>
+                    <p className="font-mono text-primary font-bold">{h.number}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : activeTab === 'household' ? (
+            /* =========================================================================
+               TAB: HOUSEHOLD
+            ========================================================================= */
+            <div className="space-y-6 max-w-3xl">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  Household Workspace
+                </h1>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Manage family benefits collaboratively while keeping individual adult data private and consent-driven.
+                </p>
+              </div>
+              <CreateHouseholdForm />
+            </div>
+          ) : activeTab === 'privacy' ? (
+            /* =========================================================================
+               TAB: PRIVACY & DATA EXPORT
+            ========================================================================= */
+            <div className="space-y-6 max-w-3xl">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  Privacy & Data Protection
+                </h1>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Your data is protected by strict PostgreSQL Row Level Security. We never collect Aadhaar numbers.
+                </p>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-bold">Export Your Data</CardTitle>
+                  <CardDescription className="text-xs">
+                    Download a full JSON machine-readable export of all your recorded circumstances and claims.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ExportDataButton
+                    exportData={{
+                      user,
+                      citizenId,
+                      personalDetails,
+                      addresses,
+                      financialProfile,
+                      employmentProfile,
+                      educationRecords,
+                      agriculturalProfile,
+                      exportedAt: new Date().toISOString(),
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          ) : activeTab === 'settings' ? (
+            /* =========================================================================
+               TAB: SETTINGS
+            ========================================================================= */
+            <div className="space-y-6 max-w-2xl">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  Preferences
+                </h1>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Manage display name and interface language.
+                </p>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-bold">Profile Preferences</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form action={updateUserSettings} className="space-y-3 text-xs">
+                    <div>
+                      <label className="font-semibold text-foreground">Display Name</label>
+                      <input
+                        type="text"
+                        name="fullName"
+                        defaultValue={user.full_name ?? ''}
+                        className="mt-1 w-full rounded border border-border bg-background px-3 py-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-semibold text-foreground">Preferred Language</label>
+                      <select
+                        name="language"
+                        defaultValue={user.preferred_language ?? 'en'}
+                        className="mt-1 w-full rounded border border-border bg-background px-3 py-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                      >
+                        <option value="en">English</option>
+                        <option value="bn">বাংলা (Bengali)</option>
+                      </select>
+                    </div>
+                    <div className="pt-2">
+                      <Button type="submit" size="sm">Save Preferences</Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
+          ) : null}
+        </main>
+      </div>
+    </div>
+  );
+}

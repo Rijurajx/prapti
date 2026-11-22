@@ -3,24 +3,25 @@
 @tailwind utilities;
 
 :root {
-  --background: 40 30% 97%;
-  --foreground: 200 10% 15%;
-  --card: 40 25% 99%;
-  --card-foreground: 200 10% 15%;
-  --primary: 168 45% 28%;
-  --primary-foreground: 0 0% 100%;
-  --muted: 40 15% 92%;
-  --muted-foreground: 200 6% 40%;
-  --border: 40 12% 86%;
-  --input: 40 12% 86%;
-  --ring: 168 45% 28%;
-  --destructive: 2 45% 42%;
+  /* Creamy off-white paper tone matching the reference image */
+  --background: 45 15% 97%;       /* #F7F6F3 */
+  --foreground: 0 0% 7%;          /* #121212 deep ink black */
+  --card: 45 10% 98.5%;          /* #FAF9F6 crisp card background */
+  --card-foreground: 0 0% 7%;
+  --primary: 0 0% 4%;            /* #0A0A0A solid black button / active */
+  --primary-foreground: 0 0% 100%; /* #FFFFFF */
+  --muted: 45 10% 92%;           /* #ECEAE4 subtle muted fill */
+  --muted-foreground: 40 4% 40%;  /* #6A6964 secondary text */
+  --border: 45 6% 84%;           /* #DCDAD2 hairline border */
+  --input: 45 6% 84%;
+  --ring: 0 0% 10%;
+  --destructive: 0 75% 42%;
   --destructive-foreground: 0 0% 100%;
-  --success: 150 35% 32%;
+  --success: 145 65% 28%;
   --success-foreground: 0 0% 100%;
-  --warning: 38 60% 42%;
+  --warning: 35 85% 36%;
   --warning-foreground: 0 0% 100%;
-  --radius: 0.5rem;
+  --radius: 0.25rem;             /* 4px crisp minimalist corners */
 }
 
 @layer base {
@@ -31,8 +32,29 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: var(--font-sans), var(--font-bengali), system-ui, sans-serif;
+    font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    letter-spacing: -0.01em;
   }
+
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Retro scanline & halftone effects */
+.scanline-pattern {
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.04) 2px,
+    rgba(0, 0, 0, 0.04) 4px
+  );
+}
+
+.ascii-box {
+  font-family: var(--font-mono), monospace;
+  line-height: 1.15;
 }
 
 @media (prefers-reduced-motion: reduce) {

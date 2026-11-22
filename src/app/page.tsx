@@ -1,145 +1,266 @@
 import Link from 'next/link';
-import { ClipboardCheck, FileCheck2, Search, ShieldCheck, ArrowRight, Sparkles } from 'lucide-react';
-import { LinkButton } from '@/components/ui/link-button';
 import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card';
-
-const steps = [
-  {
-    icon: Search,
-    title: 'Tell us about your circumstances',
-    description:
-      'Answer short questions about age, address, education, income and work. You can skip anything you do not want to share.',
-  },
-  {
-    icon: ClipboardCheck,
-    title: 'See what may apply',
-    description:
-      'Schemes are checked against their published rules. Results are shown as likely eligible, needs more information, likely ineligible, or cannot be assessed until the rules are verified.',
-  },
-  {
-    icon: FileCheck2,
-    title: 'Prepare and track',
-    description:
-      'See the documents each scheme asks for, follow the official application steps, and track your own progress and deadlines.',
-  },
-];
-
-const privacyPoints = [
-  'We collect only what a scheme\'s rules need.',
-  'We never ask for Aadhaar numbers or other identity-document numbers.',
-  'You control your own profile. Other adult family members see your information only if you allow it.',
-  'Results are guidance, not a promise of benefit or approval.',
-];
+  ArrowRight,
+  ShieldCheck,
+  Search,
+  CheckCircle2,
+  FileCheck2,
+  Scale,
+  Sparkles,
+  Layers,
+  ChevronRight,
+} from 'lucide-react';
+import { IndiaMapAscii } from '@/components/india-map-ascii';
 
 export default function HomePage() {
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
-          <Link href="/" className="text-base font-semibold tracking-tight">
-            PRAPTI
-          </Link>
-          <nav className="flex items-center gap-2 sm:gap-3">
-            <Link href="/explore" className="text-xs font-medium text-muted-foreground hover:text-foreground hidden sm:block">
-              Explore Schemes
+    <div className="flex min-h-screen flex-col bg-background text-foreground font-mono antialiased selection:bg-black selection:text-white">
+      {/* Top Navigation */}
+      <header className="border-b border-border bg-card/60 backdrop-blur-sm sticky top-0 z-50">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+          <div className="flex items-center gap-2.5">
+            {/* Geometric pixel icon matching demo */}
+            <div className="flex items-center gap-0.5 text-foreground">
+              <span className="inline-block h-3.5 w-3.5 bg-foreground" />
+              <div className="flex flex-col gap-0.5">
+                <span className="inline-block h-1.5 w-1.5 bg-foreground" />
+                <span className="inline-block h-1.5 w-1.5 bg-foreground" />
+              </div>
+            </div>
+            <Link href="/" className="font-pixel text-base font-bold tracking-tight">
+              PRAPTI
             </Link>
-            <Link href="/how-it-works" className="text-xs font-medium text-muted-foreground hover:text-foreground hidden sm:block">
+          </div>
+
+          <nav className="hidden md:flex items-center gap-6 text-xs text-muted-foreground uppercase tracking-wider">
+            <Link href="#features" className="hover:text-foreground transition-colors">
+              Features
+            </Link>
+            <Link href="/how-it-works" className="hover:text-foreground transition-colors">
               How It Works
             </Link>
-            <LinkButton variant="ghost" size="sm" href="/auth/sign-in">
-              Sign in
-            </LinkButton>
-            <LinkButton size="sm" href="/auth/sign-up">
-              Create account
-            </LinkButton>
+            <Link href="/explore" className="hover:text-foreground transition-colors">
+              Schemes
+            </Link>
+            <Link href="/about" className="hover:text-foreground transition-colors">
+              About
+            </Link>
           </nav>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/auth/sign-in"
+              className="text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground hidden sm:block"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/auth/sign-up"
+              className="rounded-[3px] bg-foreground px-4 py-2 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shadow-sm"
+            >
+              Get Started
+            </Link>
+          </div>
         </div>
       </header>
 
       <main className="flex-1">
-        <section className="mx-auto max-w-5xl px-4 py-14 sm:px-6 sm:py-20">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary mb-4">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>AI-Powered Citizen Benefits Discovery for West Bengal & India</span>
-          </div>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl max-w-3xl leading-tight">
-            Your Benefits. Your Rights. Your Claim.
-          </h1>
-          <p className="mt-4 max-w-2xl text-muted-foreground text-base sm:text-lg leading-relaxed">
-            PRAPTI is an intelligent citizen-benefits companion that helps you and your family discover
-            government schemes you qualify for, understand official requirements, and manage your applications
-            with zero identity-document number collection.
-          </p>
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <LinkButton size="lg" href="/auth/sign-up">
-              Discover Your Benefits <ArrowRight className="ml-1.5 h-4 w-4" />
-            </LinkButton>
-            <LinkButton variant="secondary" size="lg" href="/explore">
-              Explore Schemes
-            </LinkButton>
-            <LinkButton variant="ghost" size="lg" href="/how-it-works">
-              How It Works
-            </LinkButton>
+        {/* Hero Section matching Demo Layout */}
+        <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-20 lg:py-24">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            {/* Left Column: Pixel Headline & Description */}
+            <div className="lg:col-span-7 space-y-6">
+              <div className="space-y-1">
+                <h1 className="font-pixel text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-[1.08]">
+                  PRAPTI
+                  <br />
+                  AI AGENT
+                </h1>
+              </div>
+
+              <p className="max-w-xl text-sm sm:text-base text-muted-foreground leading-relaxed">
+                Your personal citizen benefits companion, helping you and your family discover verified government schemes, understand eligibility, and prepare claims with zero identity number collection.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-4 pt-2">
+                <Link
+                  href="/auth/sign-up"
+                  className="rounded-[3px] bg-foreground px-6 py-3 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shadow-sm"
+                >
+                  Get Started
+                </Link>
+                <Link
+                  href="/how-it-works"
+                  className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wider text-foreground font-semibold hover:underline"
+                >
+                  See How It Works <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+
+              {/* Status Pill Telemetry */}
+              <div className="pt-4 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+                <div className="inline-flex items-center gap-1.5 rounded border border-border bg-card px-2.5 py-1">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>WEST BENGAL PILOT // 6 VERIFIED SCHEMES</span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 rounded border border-border bg-card px-2.5 py-1">
+                  <ShieldCheck className="h-3 w-3 text-foreground" />
+                  <span>ZERO AADHAAR NUMBERS STORED</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: ASCII Scanline India Map */}
+            <div className="lg:col-span-5 flex justify-center lg:justify-end">
+              <IndiaMapAscii />
+            </div>
           </div>
         </section>
 
-        <section
-          id="how-it-works"
-          className="border-t border-border bg-card/40 py-12 sm:py-16"
-        >
-          <div className="mx-auto max-w-5xl px-4 sm:px-6">
-            <h2 className="text-2xl font-semibold tracking-tight">How it works</h2>
-            <p className="mt-2 text-sm text-muted-foreground max-w-xl">
-              Transparent, evidence-based matching in three clear steps.
-            </p>
-            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {steps.map((step) => {
-                const Icon = step.icon;
-                return (
-                  <Card key={step.title}>
-                    <CardHeader>
-                      <Icon className="mb-2 h-5 w-5 text-primary" aria-hidden="true" />
-                      <CardTitle className="text-base">{step.title}</CardTitle>
-                      <CardDescription className="text-xs leading-relaxed">{step.description}</CardDescription>
-                    </CardHeader>
-                  </Card>
-                );
-              })}
-            </div>
-            <div className="mt-6 text-center">
+        {/* Informative Architecture Grid */}
+        <section id="features" className="border-t border-border bg-card/40 py-16">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-border/80 pb-4">
+              <div>
+                <span className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                  {'//'} CORE ARCHITECTURE
+                </span>
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight mt-1 text-foreground">
+                  Deterministic Eligibility & Privacy by Design
+                </h2>
+              </div>
               <Link
-                href="/how-it-works"
-                className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1"
+                href="/explore"
+                className="text-xs uppercase tracking-wider text-primary hover:underline inline-flex items-center gap-1 font-semibold"
               >
-                Read the full methodology and safety rules <ArrowRight className="h-3 w-3" />
+                Explore Catalogue <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="rounded-lg border border-border bg-card p-5 space-y-3">
+                <div className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">
+                  01 // PROFILE-DRIVEN
+                </div>
+                <h3 className="text-base font-bold text-foreground">Multi-Characteristic Matching</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Citizens belong to overlapping groups. A female college student from a farming household qualifies across student, women, and rural benefit categories simultaneously.
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-border bg-card p-5 space-y-3">
+                <div className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">
+                  02 // DETERMINISTIC RULES
+                </div>
+                <h3 className="text-base font-bold text-foreground">Kleene 3-Valued Logic Engine</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Generative AI is strictly forbidden from inventing rules or deciding eligibility. Rules evaluate to PASS, FAIL, or UNKNOWN with complete audit traces and gazette citations.
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-border bg-card p-5 space-y-3">
+                <div className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">
+                  03 // PRIVACY SAFEGUARDS
+                </div>
+                <h3 className="text-base font-bold text-foreground">Zero ID Numbers Collected</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  PRAPTI never asks for Aadhaar numbers, PAN, or voter ID strings. Document availability is tracked as readiness flags, preserving citizen dignity and data safety.
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
-          <h2 className="text-2xl font-semibold tracking-tight">
-            How PRAPTI handles your information
-          </h2>
-          <ul className="mt-6 list-disc space-y-2 pl-5 text-sm text-muted-foreground leading-relaxed">
-            {privacyPoints.map((point) => (
-              <li key={point}>{point}</li>
-            ))}
-          </ul>
+        {/* Live Seeded Schemes Strip */}
+        <section className="border-t border-border py-14">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                  {'//'} VERIFIED REGISTRY
+                </span>
+                <h2 className="text-lg font-bold text-foreground mt-0.5">
+                  Initial Launch Schemes (West Bengal & Central)
+                </h2>
+              </div>
+              <span className="text-xs text-muted-foreground">100% Verified Sources</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+              {[
+                {
+                  code: 'WB-K2',
+                  name: 'Kanyashree Prakalpa (K2)',
+                  bn: 'কন্যাশ্রী প্রকল্প',
+                  benefit: '₹25,000 one-time grant',
+                  dept: 'Women & Child Dev, WB',
+                },
+                {
+                  code: 'WB-SVMCM',
+                  name: 'Swami Vivekananda Scholarship',
+                  bn: 'স্বামী বিবেকানন্দ স্কলারশিপ',
+                  benefit: '₹12,000 - ₹60,000 / year',
+                  dept: 'Higher Education Dept, WB',
+                },
+                {
+                  code: 'WB-KB',
+                  name: 'Krishak Bandhu (Natun)',
+                  bn: 'কৃষক বন্ধু (নতুন)',
+                  benefit: 'Up to ₹10,000/yr + ₹2L insurance',
+                  dept: 'Dept of Agriculture, WB',
+                },
+                {
+                  code: 'WB-LB',
+                  name: 'Lakshmir Bhandar',
+                  bn: 'লক্ষ্মীর ভাণ্ডার',
+                  benefit: '₹1,000 - ₹1,200 monthly',
+                  dept: 'Women & Child Dev, WB',
+                },
+                {
+                  code: 'WB-YS',
+                  name: 'Yuvasree Assistance',
+                  bn: 'যুবশ্রী সহায়তা',
+                  benefit: '₹1,500 monthly stipend',
+                  dept: 'Labour Department, WB',
+                },
+                {
+                  code: 'IN-PMK',
+                  name: 'PM-KISAN Samman Nidhi',
+                  bn: 'প্রধানমন্ত্রী কিষাণ নিধি',
+                  benefit: '₹6,000 annually in 3 terms',
+                  dept: 'Ministry of Agriculture, India',
+                },
+              ].map((s) => (
+                <div
+                  key={s.code}
+                  className="rounded border border-border bg-card p-3.5 space-y-1.5 hover:border-foreground transition-colors"
+                >
+                  <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                    <span className="font-semibold text-foreground">{s.code}</span>
+                    <span>{s.dept}</span>
+                  </div>
+                  <p className="font-bold text-foreground text-sm">{s.name}</p>
+                  <p className="font-bengali text-xs text-muted-foreground">{s.bn}</p>
+                  <div className="rounded bg-muted/40 p-1.5 text-[11px] font-medium text-foreground">
+                    {s.benefit}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
       </main>
 
-      <footer className="border-t border-border bg-card">
-        <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <p>
-            PRAPTI is an independent guidance tool. Always confirm scheme details on official government portals.
-          </p>
-          <nav className="flex flex-wrap items-center gap-4">
+      {/* Minimal Footer */}
+      <footer className="border-t border-border bg-card/60 py-8 text-xs text-muted-foreground">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="font-pixel text-xs font-bold text-foreground">PRAPTI</span>
+            <span>{'//'}</span>
+            <span>YOUR BENEFITS. YOUR RIGHTS. YOUR CLAIM.</span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-6 text-[11px] uppercase tracking-wider">
             <Link href="/about" className="hover:text-foreground">
               About
             </Link>
@@ -147,15 +268,15 @@ export default function HomePage() {
               How It Works
             </Link>
             <Link href="/explore" className="hover:text-foreground">
-              Explore Schemes
+              Explore
             </Link>
             <Link href="/privacy" className="hover:text-foreground">
-              Privacy Policy
+              Privacy
             </Link>
             <Link href="/terms" className="hover:text-foreground">
-              Terms of Use
+              Terms
             </Link>
-          </nav>
+          </div>
         </div>
       </footer>
     </div>

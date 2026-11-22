@@ -31,7 +31,7 @@ export default async function HouseholdInvitePage({
   } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 space-y-6">
       <PageHeader
         title="Household invitation"
         description="Someone has invited you to join their household on Prapti."
