@@ -71,7 +71,7 @@ create policy "creator or active member can select households"
     or exists (
       select 1 from public.household_members hm
       join public.citizen_profiles cp on cp.id = hm.citizen_profile_id
-      where hm.household_id = id
+      where hm.household_id = households.id
         and hm.status = 'active'
         and cp.owner_user_id = (select auth.uid())
     )
