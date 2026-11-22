@@ -21,7 +21,6 @@ import {
 } from '@/lib/validation/scheme';
 import {
   canEditVersion,
-  canPublishVersion,
   canRetireVersion,
   nextVersionNumber,
   type VersionSnapshot,
@@ -408,63 +407,15 @@ export async function publishVersion(input: PublishInput): Promise<ActionResult>
   const { supabase, userId } = guard;
   const id = parsed.data.schemeVersionId;
 
-  const version = await loadVersion(supabase, id);
-  if (!version.ok) return version;
-
-  const { data: sourceRows, error: sourceError } = await supabase
-    .from('scheme_sources')
-    .select('verified_at')
-    .eq('scheme_version_id', id);
-  const { count: ruleCount, error: ruleError } = await supabase
-    .from('scheme_rules')
-    .select('id', { count: 'exact', head: true })
-    .eq('scheme_version_id', id);
-  if (sourceError || ruleError) {
-    console.error('publishVersion failed', sourceError?.code ?? ruleError?.code);
-    return { ok: false, error: GENERIC_ERROR };
-  }
-  const sources = (sourceRows ?? []) as { verified_at: string | null }[];
-
-  const gate = canPublishVersion({
-    status: version.row.status,
-    sourceCount: sources.length,
-    unverifiedSourceCount: sources.filter((s) => s.verified_at === null).length,
-    ruleCount: ruleCount ?? 0,
-  });
-  if (!gate.ok) return { ok: false, error: gate.reason };
-
-  // Retire any previously published version first; the trigger allows published -> retired only.
-  const { error: retireError } = await supabase
-    .from('scheme_versions')
-    .update({ status: 'retired' })
-    .eq('scheme_id', version.row.scheme_id)
-    .eq('status', 'published')
-    .neq('id', id);
-  if (retireError) {
-    console.error('publishVersion failed', retireError.code);
+  // The database function checks the gate and performs all writes in one transaction.
+  const { error } = await supabase.rpc('publish_scheme_version', { p_version_id: id });
+  if (error) {
+    console.error('publishVersion failed', error.code);
+    if (error.code === 'check_violation') return { ok: false, error: error.message };
     return { ok: false, error: GENERIC_ERROR };
   }
 
-  const { error: publishError } = await supabase
-    .from('scheme_versions')
-    .update({ status: 'published', published_at: new Date().toISOString() })
-    .eq('id', id)
-    .eq('status', 'in_review');
-  if (publishError) {
-    console.error('publishVersion failed', publishError.code);
-    return { ok: false, error: GENERIC_ERROR };
-  }
-
-  const { error: schemeError } = await supabase
-    .from('schemes')
-    .update({ status: 'published', current_version_id: id })
-    .eq('id', version.row.scheme_id);
-  if (schemeError) {
-    console.error('publishVersion failed', schemeError.code);
-    return { ok: false, error: GENERIC_ERROR };
-  }
-
-  await afterWrite(supabase, userId, 'scheme.publish', 'scheme_versions', id);
+  await afterWrite(supabase, userId, 'publish_version', 'scheme_versions', id);
   return { ok: true };
 }
 
