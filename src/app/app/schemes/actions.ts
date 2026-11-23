@@ -2,17 +2,12 @@
 
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { resolveActiveCitizenId } from '@/app/app/profile/active-citizen';
 
 export type ActionResult = { ok: true; isSaved?: boolean } | { ok: false; error: string };
 
 async function resolveCitizen(supabase: any, userId: string): Promise<string | null> {
-  const { data } = await supabase
-    .from('citizen_profiles')
-    .select('id')
-    .eq('owner_user_id', userId)
-    .eq('relationship_to_owner', 'self')
-    .maybeSingle();
-  return data?.id ?? null;
+  return resolveActiveCitizenId(supabase, userId);
 }
 
 export async function toggleSaveScheme(schemeId: string): Promise<ActionResult> {

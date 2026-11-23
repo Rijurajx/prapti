@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { LinkButton } from '@/components/ui/link-button';
 import { getSchemeDetail } from '@/services/matching';
 import { SchemeDetailActions } from './scheme-detail-actions';
+import { resolveActiveCitizenId } from '@/app/app/profile/active-citizen';
 
 export default async function SchemeDetailPage({
   params,
@@ -34,13 +35,7 @@ export default async function SchemeDetailPage({
 
   let citizenId: string | null = null;
   if (user) {
-    const { data: citizen } = await supabase
-      .from('citizen_profiles')
-      .select('id')
-      .eq('owner_user_id', user.id)
-      .eq('relationship_to_owner', 'self')
-      .maybeSingle();
-    citizenId = citizen?.id ?? null;
+    citizenId = await resolveActiveCitizenId(supabase, user.id);
   }
 
   const result = await getSchemeDetail(supabase, schemeId, citizenId);

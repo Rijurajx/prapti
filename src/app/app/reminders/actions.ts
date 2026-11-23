@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { resolveActiveCitizenId } from '@/app/app/profile/active-citizen';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -13,13 +14,7 @@ const reminderSchema = z.object({
 });
 
 async function resolveCitizen(supabase: any, userId: string): Promise<string | null> {
-  const { data } = await supabase
-    .from('citizen_profiles')
-    .select('id')
-    .eq('owner_user_id', userId)
-    .eq('relationship_to_owner', 'self')
-    .maybeSingle();
-  return data?.id ?? null;
+  return resolveActiveCitizenId(supabase, userId);
 }
 
 export async function createReminder(formData: FormData): Promise<ActionResult> {

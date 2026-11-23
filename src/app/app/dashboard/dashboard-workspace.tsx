@@ -53,6 +53,8 @@ import { AgricultureForm } from '@/app/app/profile/agriculture/agriculture-form'
 import { DocumentsForm, type DocumentRow } from '@/app/app/profile/documents/documents-form';
 import { CreateHouseholdForm } from '@/app/app/household/household-forms';
 import { updateUserSettings } from '@/app/app/settings/actions';
+import { FamilyMembersView, type FamilyMemberItem } from '@/app/app/family/family-members-view';
+import { switchActiveProfile } from '@/app/app/family/actions';
 import type { PersonalizedOpportunities } from '@/services/matching';
 
 interface NavSubItem {
@@ -71,6 +73,8 @@ interface NavCategory {
 
 interface DashboardWorkspaceProps {
   user: { id: string; email?: string; full_name?: string; preferred_language?: string };
+  activeCitizen: { id: string; name: string; relationship: string };
+  familyMembers: FamilyMemberItem[];
   citizenId: string;
   initialTab?: string;
   opportunities: PersonalizedOpportunities;
@@ -90,6 +94,8 @@ interface DashboardWorkspaceProps {
 
 export function DashboardWorkspace({
   user,
+  activeCitizen,
+  familyMembers,
   citizenId,
   initialTab = 'overview',
   opportunities,
@@ -109,13 +115,15 @@ export function DashboardWorkspace({
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [selectedSchemeId, setSelectedSchemeId] = useState<string | null>(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [switchingProfileId, setSwitchingProfileId] = useState<string | null>(null);
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({
     overview: true,
     schemes: true,
     profile: true,
     applications: true,
     ai: true,
-    household: true,
+    family: true,
   });
 
   // Keep state in sync with URL without page reload
@@ -137,6 +145,21 @@ export function DashboardWorkspace({
       const url = new URL(window.location.href);
       url.searchParams.set('tab', tabId);
       window.history.pushState({}, '', url.toString());
+    }
+  };
+
+  const handleSwitchMember = async (memberId: string) => {
+    if (memberId === activeCitizen.id) {
+      setUserDropdownOpen(false);
+      return;
+    }
+    setSwitchingProfileId(memberId);
+    const res = await switchActiveProfile(memberId);
+    if (res.ok) {
+      window.location.reload();
+    } else {
+      alert(res.error || 'Failed to switch profile');
+      setSwitchingProfileId(null);
     }
   };
 
@@ -215,10 +238,15 @@ export function DashboardWorkspace({
       ],
     },
     {
-      id: 'household',
-      title: 'HOUSEHOLD & PRIVACY',
+      id: 'family',
+      title: 'FAMILY & SETTINGS',
       items: [
-        { id: 'household', label: 'Household Workspace', icon: Users, badge: households.length || undefined },
+        {
+          id: 'family_members',
+          label: 'Family Members',
+          icon: Users,
+          badge: familyMembers.length > 1 ? `${familyMembers.length} PROFILES` : undefined,
+        },
         { id: 'privacy', label: 'Privacy & Data Export', icon: ShieldCheck },
         { id: 'settings', label: 'Preferences', icon: Settings },
       ],
@@ -230,7 +258,7 @@ export function DashboardWorkspace({
     ? schemes.find((s) => s.id === selectedSchemeId)
     : null;
 
-  const firstName = user.full_name?.split(' ')[0] ?? 'CITIZEN';
+  const firstName = activeCitizen.name.split(' ')[0] ?? 'CITIZEN';
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background text-foreground font-mono">
@@ -279,18 +307,18 @@ export function DashboardWorkspace({
             const isOpen = openCategories[cat.id] ?? true;
 
             return (
-              <div key={cat.id} className="space-y-1">
-                {/* Category Header (collapsible) */}
+              <div key={cat.id} className="space-y-1.5 pt-1">
+                {/* Category Header (collapsible, prominent and darker) */}
                 <button
                   type="button"
                   onClick={() => toggleCategory(cat.id)}
-                  className="flex w-full items-center justify-between px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex w-full items-center justify-between px-2.5 py-1.5 text-xs font-black uppercase tracking-wider text-foreground hover:text-black transition-colors rounded-sm bg-muted/30"
                 >
-                  <span>{'//'} {cat.title}</span>
+                  <span className="font-extrabold tracking-wide">{'//'} {cat.title}</span>
                   {isOpen ? (
-                    <ChevronDown className="h-3 w-3" />
+                    <ChevronDown className="h-3.5 w-3.5 stroke-[2.5]" />
                   ) : (
-                    <ChevronRight className="h-3 w-3" />
+                    <ChevronRight className="h-3.5 w-3.5 stroke-[2.5]" />
                   )}
                 </button>
 
@@ -306,25 +334,25 @@ export function DashboardWorkspace({
                           key={item.id}
                           type="button"
                           onClick={() => switchTab(item.id)}
-                          className={`flex w-full items-center justify-between px-3 py-2 text-xs rounded-[3px] transition-all text-left ${
+                          className={`flex w-full items-center justify-between px-3 py-2 text-xs font-bold rounded-[3px] transition-all text-left ${
                             isActive
-                              ? 'bg-foreground text-background font-semibold shadow-sm'
-                              : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                              ? 'bg-foreground text-background font-black shadow-sm'
+                              : 'text-foreground/80 hover:bg-muted/60 hover:text-foreground'
                           }`}
                         >
                           <div className="flex items-center gap-2.5 truncate">
-                            <Icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-background' : 'text-muted-foreground'}`} />
+                            <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-background' : 'text-foreground/80'}`} />
                             <span className="truncate">{item.label}</span>
                           </div>
 
                           {item.badge !== undefined && (
                             <span
-                              className={`rounded px-1.5 py-0.2 text-[9px] font-bold uppercase tracking-tight ${
+                              className={`rounded px-1.5 py-0.5 text-[9px] font-black uppercase tracking-tight ${
                                 isActive
                                   ? 'bg-background text-foreground'
                                   : item.badgeTone === 'success'
                                   ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                                  : 'bg-muted text-muted-foreground'
+                                  : 'bg-muted text-foreground'
                               }`}
                             >
                               {item.badge}
@@ -404,8 +432,85 @@ export function DashboardWorkspace({
               </button>
             )}
 
-            <div className="hidden md:flex items-center gap-1 text-muted-foreground text-[11px]">
-              <span>[ USER: {firstName} ]</span>
+            {/* Highlighted Solid Black Family Profile Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                className="bg-foreground text-background font-mono font-bold text-xs uppercase px-3 py-1.5 rounded-[3px] flex items-center gap-1.5 hover:bg-black transition-colors shadow-sm cursor-pointer border border-foreground"
+                title="Switch Beneficiary Profile"
+              >
+                <User className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate max-w-[140px] sm:max-w-[240px]">
+                  [USER: {activeCitizen.name.toUpperCase()} ({activeCitizen.relationship.toUpperCase()})]
+                </span>
+                <ChevronDown
+                  className={`h-3 w-3 shrink-0 transition-transform duration-150 ${
+                    userDropdownOpen ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+
+              {userDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setUserDropdownOpen(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-1.5 z-50 w-72 border-2 border-foreground bg-card p-2 shadow-2xl font-mono text-xs">
+                    <div className="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground border-b border-border mb-1">
+                      {'//'} Switch Family Profile
+                    </div>
+                    <div className="max-h-60 overflow-y-auto space-y-1 py-1">
+                      {familyMembers.map((m) => {
+                        const isActive = m.id === activeCitizen.id;
+                        const isSwitching = switchingProfileId === m.id;
+                        return (
+                          <button
+                            key={m.id}
+                            type="button"
+                            disabled={isSwitching}
+                            onClick={() => handleSwitchMember(m.id)}
+                            className={`w-full flex items-center justify-between px-2.5 py-2 text-left rounded-sm transition-colors ${
+                              isActive
+                                ? 'bg-foreground text-background font-bold'
+                                : 'hover:bg-muted text-foreground'
+                            }`}
+                          >
+                            <div className="flex flex-col min-w-0 pr-2">
+                              <span className="font-bold truncate">{m.name}</span>
+                              <span
+                                className={`text-[10px] uppercase font-semibold ${
+                                  isActive ? 'text-background/80' : 'text-muted-foreground'
+                                }`}
+                              >
+                                ({m.relationship})
+                              </span>
+                            </div>
+                            {isActive && <Check className="h-4 w-4 shrink-0" />}
+                            {isSwitching && (
+                              <span className="text-[10px] animate-pulse">Switching...</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="border-t border-border pt-1.5 mt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserDropdownOpen(false);
+                          switchTab('family_members');
+                        }}
+                        className="w-full flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-foreground hover:bg-muted rounded-sm transition-colors"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        <span>+ Add Family Member</span>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             <form action={signOut}>
@@ -1006,21 +1111,14 @@ export function DashboardWorkspace({
                 ))}
               </div>
             </div>
-          ) : activeTab === 'household' ? (
+          ) : activeTab === 'family_members' || activeTab === 'household' ? (
             /* =========================================================================
-               TAB: HOUSEHOLD
+               TAB: FAMILY MEMBERS (EASY REGISTRATION & SWITCHING)
             ========================================================================= */
-            <div className="space-y-6 max-w-3xl">
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                  Household Workspace
-                </h1>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Manage family benefits collaboratively while keeping individual adult data private and consent-driven.
-                </p>
-              </div>
-              <CreateHouseholdForm />
-            </div>
+            <FamilyMembersView
+              activeCitizen={activeCitizen}
+              familyMembers={familyMembers}
+            />
           ) : activeTab === 'privacy' ? (
             /* =========================================================================
                TAB: PRIVACY & DATA EXPORT

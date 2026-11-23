@@ -16,6 +16,8 @@ import {
   type PersonalDetailsInput,
 } from '@/lib/validation/profile';
 
+import { resolveActiveCitizenId } from './active-citizen';
+
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
 type ServerClient = NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>;
@@ -46,20 +48,9 @@ function isAddressKind(value: string): value is AddressKind {
   return (ADDRESS_KIND_VALUES as readonly string[]).includes(value);
 }
 
-/** Resolves the account holder's citizen id from the signed-in user. Never trusts the client. */
+/** Resolves the active citizen id from the signed-in user or active cookie. Never trusts the client. */
 async function findCitizenId(supabase: ServerClient, userId: string): Promise<string | null> {
-  const { data, error } = await supabase
-    .from('citizen_profiles')
-    .select('id')
-    .eq('owner_user_id', userId)
-    .eq('relationship_to_owner', 'self')
-    .maybeSingle();
-
-  if (error) {
-    console.error('findCitizenId failed', error.code);
-    return null;
-  }
-  return (data as { id: string } | null)?.id ?? null;
+  return resolveActiveCitizenId(supabase, userId);
 }
 
 async function resolveSession(): Promise<SessionContext> {

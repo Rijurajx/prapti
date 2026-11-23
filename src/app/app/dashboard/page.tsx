@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getPersonalizedOpportunities } from '@/services/matching';
 import { getPersonalDetails, getAddresses } from '@/app/app/profile/actions';
@@ -13,6 +14,7 @@ import { getAgriculturalProfile } from '@/app/app/profile/agriculture-actions';
 import { getMyHouseholds } from '@/app/app/household/queries';
 import { DashboardWorkspace } from './dashboard-workspace';
 import { DOCUMENT_STATUS_VALUES } from '@/lib/validation/finance-education-documents';
+import { ACTIVE_CITIZEN_COOKIE } from '@/app/app/profile/active-citizen';
 import type { DocumentRow } from '@/app/app/profile/documents/documents-form';
 import { StatusNotice } from '@/components/ui/status-notice';
 
@@ -33,7 +35,8 @@ export default async function DashboardPage({
   } = await supabase.auth.getUser();
   if (!user) redirect('/auth/sign-in');
 
-  const [userProfileRes, citizenRes] = await Promise.all([
+  // Fetch user profile and all citizen profiles owned by this user
+  const [userProfileRes, citizensRes] = await Promise.all([
     supabase
       .from('user_profiles')
       .select('id, full_name, preferred_language')
@@ -41,13 +44,20 @@ export default async function DashboardPage({
       .maybeSingle(),
     supabase
       .from('citizen_profiles')
-      .select('id')
+      .select(`
+        id,
+        display_name,
+        relationship_to_owner,
+        created_at,
+        citizen_personal_details (date_of_birth, gender),
+        citizen_addresses (state, district)
+      `)
       .eq('owner_user_id', user.id)
-      .eq('relationship_to_owner', 'self')
-      .maybeSingle(),
+      .order('created_at', { ascending: true }),
   ]);
 
-  if (!citizenRes.data) {
+  const allCitizens = citizensRes.data ?? [];
+  if (allCitizens.length === 0) {
     return (
       <div className="p-8">
         <StatusNotice tone="danger" title="We could not load your citizen profile">
@@ -57,9 +67,39 @@ export default async function DashboardPage({
     );
   }
 
-  const citizenId = citizenRes.data.id;
+  // Resolve active citizen from cookie or default to 'self'
+  const cookieStore = await cookies();
+  const requestedCitizenId = cookieStore.get(ACTIVE_CITIZEN_COOKIE)?.value;
 
-  // Parallel fetch of all citizen datasets for the single-page application workspace
+  const activeCitizenRow =
+    allCitizens.find((c: any) => c.id === requestedCitizenId) ??
+    allCitizens.find((c: any) => c.relationship_to_owner === 'self') ??
+    allCitizens[0];
+
+  if (!activeCitizenRow) {
+    return (
+      <div className="p-8">
+        <StatusNotice tone="danger" title="We could not load your citizen profile">
+          Please refresh the page. If this continues, sign out and sign in again.
+        </StatusNotice>
+      </div>
+    );
+  }
+
+  const citizenId = activeCitizenRow.id;
+
+  const familyMembers = allCitizens.map((c: any) => ({
+    id: c.id,
+    name: c.display_name,
+    relationship: c.relationship_to_owner,
+    isSelf: c.relationship_to_owner === 'self',
+    dateOfBirth: c.citizen_personal_details?.[0]?.date_of_birth ?? c.citizen_personal_details?.date_of_birth ?? null,
+    gender: c.citizen_personal_details?.[0]?.gender ?? c.citizen_personal_details?.gender ?? null,
+    district: c.citizen_addresses?.[0]?.district ?? null,
+    state: c.citizen_addresses?.[0]?.state ?? null,
+  }));
+
+  // Parallel fetch of all datasets for the currently active citizen profile
   const [
     opportunities,
     schemesRes,
@@ -160,6 +200,12 @@ export default async function DashboardPage({
         full_name: userProfileRes.data?.full_name ?? undefined,
         preferred_language: userProfileRes.data?.preferred_language ?? 'en',
       }}
+      activeCitizen={{
+        id: activeCitizenRow.id,
+        name: activeCitizenRow.display_name,
+        relationship: activeCitizenRow.relationship_to_owner,
+      }}
+      familyMembers={familyMembers}
       citizenId={citizenId}
       initialTab={tab}
       opportunities={opportunities}

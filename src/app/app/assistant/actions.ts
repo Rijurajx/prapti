@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { resolveActiveCitizenId } from '@/app/app/profile/active-citizen';
 import {
   extractFactsWithGemini,
   commitConfirmedFacts,
@@ -38,16 +39,10 @@ export async function confirmAndSaveFacts(facts: ExtractedFacts): Promise<Commit
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: 'Please sign in first' };
 
-  const { data: citizen } = await supabase
-    .from('citizen_profiles')
-    .select('id')
-    .eq('owner_user_id', user.id)
-    .eq('relationship_to_owner', 'self')
-    .maybeSingle();
+  const citizenId = await resolveActiveCitizenId(supabase, user.id);
+  if (!citizenId) return { ok: false, error: 'Citizen profile not found' };
 
-  if (!citizen) return { ok: false, error: 'Citizen profile not found' };
-
-  const res = await commitConfirmedFacts(supabase, citizen.id, facts);
+  const res = await commitConfirmedFacts(supabase, citizenId, facts);
   if (res.ok) {
     revalidatePath('/app/dashboard');
     revalidatePath('/app/opportunities');

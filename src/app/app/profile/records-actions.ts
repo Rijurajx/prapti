@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { resolveActiveCitizenId } from './active-citizen';
 import {
   documentStatusSchema,
   educationRecordSchema,
@@ -112,20 +113,9 @@ function isUuid(value: string): boolean {
   return UUID_PATTERN.test(value);
 }
 
-/** Resolves the account holder's citizen id from the signed-in user. Never trusts the client. */
+/** Resolves the active citizen id from the signed-in user or active cookie. Never trusts the client. */
 async function findCitizenId(supabase: ServerClient, userId: string): Promise<string | null> {
-  const { data, error } = await supabase
-    .from('citizen_profiles')
-    .select('id')
-    .eq('owner_user_id', userId)
-    .eq('relationship_to_owner', 'self')
-    .maybeSingle();
-
-  if (error) {
-    console.error('findCitizenId failed', error.code);
-    return null;
-  }
-  return (data as { id: string } | null)?.id ?? null;
+  return resolveActiveCitizenId(supabase, userId);
 }
 
 async function resolveSession(): Promise<SessionContext> {
