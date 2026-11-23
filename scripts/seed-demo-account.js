@@ -102,15 +102,45 @@ async function seedDemo() {
     domicile_confirmed: true,
   });
 
-  // Daughter education
-  await supabase.from('education_records').insert({
-    citizen_id: daughterId,
-    level: 'higher_secondary',
-    stream: 'Science',
-    institution_state: 'West Bengal',
-    passing_year: 2020,
-    marks_percentage: 84,
-  });
+  // Daughter education: Class 12 & Undergraduate B.Sc
+  console.log('Adding educational records for Demo Daughter...');
+  const { error: eduErr } = await supabase.from('education_records').insert([
+    {
+      citizen_id: daughterId,
+      level: 'class_12',
+      board_or_university: 'West Bengal Council of Higher Secondary Education (WBCHSE)',
+      institution: 'Krishnanagar Debnath High School',
+      stream: 'science',
+      programme: 'Higher Secondary (Pure Science)',
+      passing_year: 2020,
+      is_currently_pursuing: false,
+      marking_scale: 'percentage',
+      obtained_marks: 420,
+      maximum_marks: 500,
+      percentage: 84.0,
+      marksheet_available: 'available',
+      pass_certificate_available: 'available',
+    },
+    {
+      citizen_id: daughterId,
+      level: 'undergraduate',
+      board_or_university: 'University of Kalyani',
+      institution: 'Krishnagar Government College',
+      stream: 'science',
+      programme: 'Bachelor of Science (B.Sc Honours in Computer Science)',
+      passing_year: 2023,
+      is_currently_pursuing: false,
+      marking_scale: 'percentage',
+      obtained_marks: 624,
+      maximum_marks: 800,
+      percentage: 78.0,
+      marksheet_available: 'available',
+      pass_certificate_available: 'available',
+    },
+  ]);
+  if (eduErr) {
+    console.error('Failed to insert education records:', eduErr);
+  }
 
   // Daughter employment
   await supabase.from('citizen_employment_profiles').insert({
@@ -370,7 +400,7 @@ async function seedDemo() {
   }
 
   // 7. Enrolled Schemes for Demo Family:
-  // Fetch scheme IDs for PM-KISAN, Krishak Bandhu, and Lakshmir Bhandar
+  // Fetch scheme IDs for PM-KISAN, Krishak Bandhu, and Annapurna Bhandar (WB)
   const { data: allSchemes } = await supabase
     .from('schemes')
     .select('id, name, slug');
@@ -382,8 +412,8 @@ async function seedDemo() {
     const krishakBandhu = allSchemes.find(
       (s) => s.slug?.includes('krishak') || s.name?.includes('Krishak Bandhu'),
     );
-    const lakshmirBhandar = allSchemes.find(
-      (s) => s.slug?.includes('lakshmir') || s.name?.includes('Lakshmir Bhandar'),
+    const annapurnaBhandar = allSchemes.find(
+      (s) => s.slug === 'annapurna-bhandar-wb' || s.name?.includes('Women Direct Financial Assistance'),
     );
 
     if (pmKisan && fatherId) {
@@ -402,11 +432,11 @@ async function seedDemo() {
       });
     }
 
-    if (lakshmirBhandar && motherId) {
-      console.log('Enrolling Mother into Lakshmir Bhandar...');
+    if (annapurnaBhandar && motherId) {
+      console.log('Enrolling Mother into Annapurna Bhandar (West Bengal)...');
       await supabase.from('citizen_enrolled_schemes').upsert({
         citizen_id: motherId,
-        scheme_id: lakshmirBhandar.id,
+        scheme_id: annapurnaBhandar.id,
       });
     }
   }

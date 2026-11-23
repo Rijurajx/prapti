@@ -271,7 +271,7 @@ export function FamilyMembersView({
                   <option value="transgender">Transgender</option>
                   <option value="other">Other</option>
                 </select>
-                <p className="text-[10px] text-muted-foreground">Used for women-specific schemes like Lakshmir Bhandar.</p>
+                <p className="text-[10px] text-muted-foreground">Used for women-specific schemes like Annapurna Bhandar.</p>
               </div>
             </div>
 

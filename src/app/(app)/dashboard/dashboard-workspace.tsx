@@ -1315,7 +1315,7 @@ export function DashboardWorkspace({
                   </div>
                   <p className="text-sm font-semibold">No Enrolled Schemes Recorded Yet</p>
                   <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
-                    If {activeCitizen.name} is already receiving government benefits (such as PM-KISAN, Lakshmir Bhandar, or Old Age Pension), mark them in Discover Schemes by clicking &quot;+ Already Getting?&quot; on any scheme card.
+                    If {activeCitizen.name} is already receiving government benefits (such as PM-KISAN, Annapurna Bhandar, or Old Age Pension), mark them in Discover Schemes by clicking &quot;+ Already Getting?&quot; on any scheme card.
                   </p>
                   <Button size="sm" onClick={() => switchTab('schemes')} className="mt-2 text-xs font-mono">
                     Browse Schemes Directory →
