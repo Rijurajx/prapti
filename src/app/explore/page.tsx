@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import { ExploreClientView } from './explore-client-view';
 
 export const revalidate = 60;
@@ -67,6 +68,7 @@ export default async function PublicExplorePage() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            <LanguageSwitcher />
             <ThemeToggle />
             {user ? (
               <Link

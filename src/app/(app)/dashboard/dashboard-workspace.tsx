@@ -57,6 +57,8 @@ import { FamilyMembersView, type FamilyMemberItem } from '@/app/family/family-me
 import { switchActiveProfile } from '@/app/family/actions';
 import { CategoryTagsSelector } from '@/app/profile/tags-selector';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { LanguageSwitcher } from '@/components/language-switcher';
+import { useTranslation } from '@/lib/i18n/context';
 import type { PersonalizedOpportunities } from '@/services/matching';
 
 interface NavSubItem {
@@ -114,6 +116,7 @@ export function DashboardWorkspace({
   documentRows,
   households,
 }: DashboardWorkspaceProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [selectedSchemeId, setSelectedSchemeId] = useState<string | null>(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -260,10 +263,10 @@ export function DashboardWorkspace({
       id: 'overview',
       title: 'OVERVIEW & MATCHES',
       items: [
-        { id: 'overview', label: 'Dashboard Summary', icon: LayoutDashboard },
+        { id: 'overview', label: t('dashboard.overview'), icon: LayoutDashboard },
         {
           id: 'opportunities',
-          label: 'My Opportunities',
+          label: t('dashboard.myOpportunities'),
           icon: Sparkles,
           badge:
             readyToApply.length > 0
@@ -282,19 +285,19 @@ export function DashboardWorkspace({
         { id: 'schemes', label: 'Discover Schemes', icon: Search, badge: schemes.length },
         {
           id: 'saved',
-          label: 'Saved Schemes',
+          label: t('dashboard.saved'),
           icon: Bookmark,
           badge: savedSchemes.length > 0 ? savedSchemes.length : undefined,
         },
         {
           id: 'applications',
-          label: 'Tracked Claims & Tasks',
+          label: t('dashboard.claims'),
           icon: Clock,
           badge: claims.length > 0 ? claims.length : undefined,
         },
         {
           id: 'reminders',
-          label: 'Deadlines & Reminders',
+          label: t('dashboard.reminders'),
           icon: Bell,
           badge: reminders.filter((r) => !r.is_dismissed).length || undefined,
         },
@@ -304,13 +307,13 @@ export function DashboardWorkspace({
       id: 'profile',
       title: 'CITIZEN PROFILE',
       items: [
-        { id: 'profile_personal', label: 'Personal & Address', icon: User },
-        { id: 'profile_education', label: 'Education Records', icon: GraduationCap },
-        { id: 'profile_finance', label: 'Finance & Work', icon: Briefcase },
-        { id: 'profile_agriculture', label: 'Agriculture Profile', icon: Sprout },
+        { id: 'profile_personal', label: t('dashboard.personal'), icon: User },
+        { id: 'profile_education', label: t('dashboard.education'), icon: GraduationCap },
+        { id: 'profile_finance', label: t('dashboard.finance'), icon: Briefcase },
+        { id: 'profile_agriculture', label: t('dashboard.agriculture'), icon: Sprout },
         {
           id: 'profile_documents',
-          label: 'Document Inventory',
+          label: t('dashboard.documents'),
           icon: FolderLock,
           badge: `${readyDocsCount}/${totalDocsCount}`,
         },
@@ -320,7 +323,7 @@ export function DashboardWorkspace({
       id: 'ai',
       title: 'AI & GUIDANCE',
       items: [
-        { id: 'assistant', label: 'AI Benefits Assistant', icon: Bot, badge: 'GEMINI' },
+        { id: 'assistant', label: t('dashboard.aiAssistant'), icon: Bot, badge: 'GEMINI' },
         { id: 'guides', label: 'Certificate Guides', icon: BookOpen },
         { id: 'help', label: 'Helplines & FAQs', icon: HelpCircle },
       ],
@@ -331,12 +334,12 @@ export function DashboardWorkspace({
       items: [
         {
           id: 'family_members',
-          label: 'Family Members',
+          label: t('dashboard.familyMembers'),
           icon: Users,
           badge: familyMembers.length > 1 ? `${familyMembers.length} PROFILES` : undefined,
         },
-        { id: 'privacy', label: 'Privacy & Data Export', icon: ShieldCheck },
-        { id: 'settings', label: 'Preferences', icon: Settings },
+        { id: 'privacy', label: t('dashboard.privacy'), icon: ShieldCheck },
+        { id: 'settings', label: t('dashboard.settings'), icon: Settings },
       ],
     },
   ];
@@ -547,7 +550,7 @@ export function DashboardWorkspace({
                   />
                   <div className="absolute right-0 top-full mt-1.5 z-50 w-72 border-2 border-foreground bg-card p-2 shadow-2xl font-mono text-xs">
                     <div className="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground border-b border-border mb-1">
-                      {'//'} Switch Family Profile
+                      {'//'} {t('dashboard.switchBeneficiary')}
                     </div>
                     <div className="max-h-60 overflow-y-auto space-y-1 py-1">
                       {familyMembers.map((m) => {
@@ -601,6 +604,7 @@ export function DashboardWorkspace({
               )}
             </div>
 
+            <LanguageSwitcher />
             <ThemeToggle />
 
             <form action={signOut}>
@@ -611,7 +615,7 @@ export function DashboardWorkspace({
                 className="h-8 text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-950/40"
               >
                 <LogOut className="h-3.5 w-3.5 sm:mr-1 text-rose-600 dark:text-rose-400" />
-                <span className="hidden sm:inline">Sign Out</span>
+                <span className="hidden sm:inline">{t('nav.signOut')}</span>
               </Button>
             </form>
           </div>

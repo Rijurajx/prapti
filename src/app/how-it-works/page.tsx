@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import {
   Users,
   Scale,
@@ -48,6 +49,7 @@ export default async function HowItWorksPage() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            <LanguageSwitcher />
             <ThemeToggle />
             {user ? (
               <Link

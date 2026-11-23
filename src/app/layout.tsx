@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { Inter, Noto_Sans_Bengali, Space_Mono, Silkscreen } from 'next/font/google';
 import './globals.css';
+import { I18nProvider } from '@/lib/i18n/context';
+import { resolveServerLocale, LOCALE_COOKIE_NAME } from '@/lib/i18n';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -35,13 +38,17 @@ export const metadata: Metadata = {
     'An intelligent, privacy-first citizen benefits companion for West Bengal and India. Profile-driven scheme matching with zero identity number collection.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const localeCookie = cookieStore.get(LOCALE_COOKIE_NAME)?.value;
+  const initialLocale = resolveServerLocale(localeCookie);
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={initialLocale} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -64,7 +71,9 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${spaceMono.variable} ${silkscreen.variable} ${notoBengali.variable} bg-background text-foreground antialiased font-mono selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black`}
       >
-        {children}
+        <I18nProvider initialLocale={initialLocale}>
+          {children}
+        </I18nProvider>
       </body>
     </html>
   );
