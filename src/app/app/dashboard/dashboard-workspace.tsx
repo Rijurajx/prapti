@@ -172,8 +172,11 @@ export function DashboardWorkspace({
   };
 
   const citizenState =
-    addresses?.find((a: any) => a.kind === 'current')?.state ??
-    addresses?.[0]?.state ??
+    addresses?.current?.state ??
+    addresses?.permanent?.state ??
+    (Array.isArray(addresses)
+      ? addresses.find((a: any) => a.kind === 'current')?.state ?? addresses[0]?.state
+      : null) ??
     null;
 
   const readyToApply = opportunities.likelyEligible.filter((o) => o.documentReadiness.isFullyReady);
