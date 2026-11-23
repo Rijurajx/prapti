@@ -45,6 +45,8 @@ export interface AssistantChatProps {
   readyDocsCount?: number;
   totalDocsCount?: number;
   onSwitchProfile?: (memberId: string) => void;
+  initialPrompt?: string | null;
+  onClearInitialPrompt?: () => void;
 }
 
 interface ChatMessage {
@@ -145,6 +147,8 @@ export function AssistantChat({
   readyDocsCount = 0,
   totalDocsCount = 0,
   onSwitchProfile,
+  initialPrompt,
+  onClearInitialPrompt,
 }: AssistantChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
     loadStoredChat(activeCitizen.id, activeCitizen),
@@ -237,6 +241,16 @@ export function AssistantChat({
       }
     });
   };
+
+  // Auto-send initial prompt if passed from dashboard tabs (e.g. My Opportunities)
+  useEffect(() => {
+    if (initialPrompt && initialPrompt.trim()) {
+      const prompt = initialPrompt.trim();
+      onClearInitialPrompt?.();
+      handleSend(prompt);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialPrompt]);
 
   const handleConfirm = (msgId: string, facts: ExtractedFacts) => {
     startTransition(async () => {

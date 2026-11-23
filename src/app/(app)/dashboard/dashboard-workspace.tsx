@@ -137,6 +137,7 @@ export function DashboardWorkspace({
   const [schemeSearchQuery, setSchemeSearchQuery] = useState('');
   const [schemeTagFilter, setSchemeTagFilter] = useState<string>('all');
   const [schemeStateFilter, setSchemeStateFilter] = useState<string>('all');
+  const [aiAssistantPrompt, setAiAssistantPrompt] = useState<string | null>(null);
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({
     overview: true,
     schemes: true,
@@ -211,6 +212,11 @@ export function DashboardWorkspace({
 
   const toggleCategory = (catId: string) => {
     setOpenCategories((prev) => ({ ...prev, [catId]: !prev[catId] }));
+  };
+
+  const handleAskPraptiAI = (promptText: string) => {
+    setAiAssistantPrompt(promptText);
+    switchTab('assistant');
   };
 
   const citizenState =
@@ -430,7 +436,7 @@ export function DashboardWorkspace({
 
           <button
             type="button"
-            className="lg:hidden text-muted-foreground hover:text-foreground"
+            className="lg:hidden text-muted-foreground hover:text-foreground dark:hover:text-white transition-colors"
             onClick={() => setMobileSidebarOpen(false)}
           >
             <X className="h-5 w-5" />
@@ -448,13 +454,13 @@ export function DashboardWorkspace({
                 <button
                   type="button"
                   onClick={() => toggleCategory(cat.id)}
-                  className="flex w-full items-center justify-between px-2.5 py-1.5 text-xs font-black uppercase tracking-wider text-foreground hover:text-black transition-colors rounded-sm bg-muted/30"
+                  className="flex w-full items-center justify-between px-2.5 py-1.5 text-xs font-black uppercase tracking-wider text-foreground hover:bg-muted/60 hover:text-foreground dark:hover:text-white transition-colors rounded-sm bg-muted/30"
                 >
                   <span className="font-extrabold tracking-wide">{'//'} {cat.title}</span>
                   {isOpen ? (
-                    <ChevronDown className="h-3.5 w-3.5 stroke-[2.5] mr-1" />
+                    <ChevronDown className="h-3.5 w-3.5 stroke-[2.5] mr-1 text-foreground" />
                   ) : (
-                    <ChevronRight className="h-3.5 w-3.5 stroke-[2.5] mr-1" />
+                    <ChevronRight className="h-3.5 w-3.5 stroke-[2.5] mr-1 text-foreground" />
                   )}
                 </button>
 
@@ -473,11 +479,11 @@ export function DashboardWorkspace({
                           className={`flex w-full items-center justify-between px-3 py-2 text-xs font-bold rounded-[3px] transition-all text-left ${
                             isActive
                               ? 'bg-foreground text-background font-black shadow-sm'
-                              : 'text-foreground/80 hover:bg-muted/60 hover:text-foreground'
+                              : 'text-foreground/80 hover:bg-muted/60 hover:text-foreground dark:hover:text-white group'
                           }`}
                         >
                           <div className="flex items-center gap-2.5 truncate">
-                            <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-background' : 'text-foreground/80'}`} />
+                            <Icon className={`h-4 w-4 shrink-0 transition-colors ${isActive ? 'text-background' : 'text-foreground/80 group-hover:text-foreground dark:group-hover:text-white'}`} />
                             <span className="truncate">{item.label}</span>
                           </div>
 
@@ -962,6 +968,36 @@ export function DashboardWorkspace({
                       {actionRequiredDocs.length} Need Documents
                     </Badge>
                   )}
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      if (readyToApply.length > 0 && actionRequiredDocs.length > 0) {
+                        const readyNames = readyToApply.map((s) => s.schemeName).join(', ');
+                        const docNames = actionRequiredDocs.map((s) => s.schemeName).join(', ');
+                        handleAskPraptiAI(
+                          `I have ${readyToApply.length} schemes ready to apply (${readyNames}) and ${actionRequiredDocs.length} schemes where documents are needed (${docNames}). What are my immediate next steps to apply for the ready schemes, and what specific documents do I need to procure for the rest?`
+                        );
+                      } else if (readyToApply.length > 0) {
+                        const readyNames = readyToApply.map((s) => s.schemeName).join(', ');
+                        handleAskPraptiAI(
+                          `What are the step-by-step application procedures and required portal links for my eligible schemes (${readyNames})?`
+                        );
+                      } else if (actionRequiredDocs.length > 0) {
+                        const docNames = actionRequiredDocs.map((s) => s.schemeName).join(', ');
+                        handleAskPraptiAI(
+                          `What documents do I need to procure for my eligible schemes (${docNames}) and how can I get them issued in West Bengal?`
+                        );
+                      } else {
+                        handleAskPraptiAI(
+                          `What government schemes might I or my family be eligible for, and what details should I add to my profile?`
+                        );
+                      }
+                    }}
+                    className="gap-1.5 font-mono text-xs font-bold bg-foreground text-background hover:bg-black/90 dark:hover:bg-white/90 dark:hover:text-black transition-colors ml-1 shadow-sm cursor-pointer"
+                  >
+                    <PraptiLogo className="h-3.5 w-3.5" />
+                    <span>Ask Prapti AI</span>
+                  </Button>
                 </div>
               </div>
 
@@ -986,23 +1022,38 @@ export function DashboardWorkspace({
                   {/* Section 1: Ready to Apply */}
                   {readyToApply.length > 0 && (
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between border-b border-border pb-2">
+                      <div className="flex flex-wrap items-center justify-between border-b border-border pb-2 gap-2">
                         <div className="flex items-center gap-2">
                           <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                           <h2 className="text-sm font-bold uppercase tracking-tight text-foreground font-mono">
                             Directly Eligible & Ready to Apply ({readyToApply.length})
                           </h2>
                         </div>
-                        <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-bold">
-                          All Documents Ready
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-bold">
+                            All Documents Ready
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const readyNames = readyToApply.map((s) => s.schemeName).join(', ');
+                              handleAskPraptiAI(
+                                `What are the exact next steps, application portal links, and submission process for my eligible schemes: ${readyNames}?`
+                              );
+                            }}
+                            className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-emerald-800 dark:text-emerald-300 hover:underline bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30 cursor-pointer"
+                          >
+                            <PraptiLogo className="h-3 w-3" />
+                            <span>Ask Prapti AI: Next Steps →</span>
+                          </button>
+                        </div>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         You meet all eligibility criteria and have all required documents available. You can apply on the official government portal immediately.
                       </p>
                       <div className="space-y-4">
                         {readyToApply.map((opp) => (
-                          <OpportunityCard key={opp.schemeId} opportunity={opp} />
+                          <OpportunityCard key={opp.schemeId} opportunity={opp} onAskAI={handleAskPraptiAI} />
                         ))}
                       </div>
                     </div>
@@ -1011,23 +1062,45 @@ export function DashboardWorkspace({
                   {/* Section 2: Action Required - Missing Documents */}
                   {actionRequiredDocs.length > 0 && (
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between border-b border-border pb-2">
+                      <div className="flex flex-wrap items-center justify-between border-b border-border pb-2 gap-2">
                         <div className="flex items-center gap-2">
                           <AlertCircle className="h-4 w-4 text-amber-600" />
                           <h2 className="text-sm font-bold uppercase tracking-tight text-foreground font-mono">
                             Eligible — Document Action Required ({actionRequiredDocs.length})
                           </h2>
                         </div>
-                        <span className="text-[11px] font-mono text-amber-700 dark:text-amber-400 font-bold">
-                          Procure Document to Avail
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-mono text-amber-700 dark:text-amber-400 font-bold">
+                            Procure Document to Avail
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const schemesWithDocs = actionRequiredDocs
+                                .map((s) => {
+                                  const missing = s.documentReadiness.missingMandatoryDocuments
+                                    .map((d) => d.requirement.documentName)
+                                    .join(', ');
+                                  return `${s.schemeName} (Missing: ${missing || 'required proofs'})`;
+                                })
+                                .join('; ');
+                              handleAskPraptiAI(
+                                `For my eligible schemes needing documents (${schemesWithDocs}), what exact documents are needed, how and where do I procure them in my state, and what alternative certificates are accepted?`
+                              );
+                            }}
+                            className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-amber-800 dark:text-amber-300 hover:underline bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30 cursor-pointer"
+                          >
+                            <PraptiLogo className="h-3 w-3" />
+                            <span>Ask Prapti AI: Missing Documents Guide →</span>
+                          </button>
+                        </div>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         You satisfy all eligibility rules! You only need to obtain or upload the highlighted required document(s) to submit your claim.
                       </p>
                       <div className="space-y-4">
                         {actionRequiredDocs.map((opp) => (
-                          <OpportunityCard key={opp.schemeId} opportunity={opp} />
+                          <OpportunityCard key={opp.schemeId} opportunity={opp} onAskAI={handleAskPraptiAI} />
                         ))}
                       </div>
                     </div>
@@ -1036,23 +1109,37 @@ export function DashboardWorkspace({
                   {/* Section 3: Incomplete Profile Info (Only relevant to user) */}
                   {relevantNeedsInfo.length > 0 && (
                     <div className="space-y-3 pt-2">
-                      <div className="flex items-center justify-between border-b border-border pb-2">
+                      <div className="flex flex-wrap items-center justify-between border-b border-border pb-2 gap-2">
                         <div className="flex items-center gap-2">
                           <HelpCircle className="h-4 w-4 text-muted-foreground" />
                           <h2 className="text-sm font-bold uppercase tracking-tight text-foreground font-mono">
                             Complete Profile to Unlock More ({relevantNeedsInfo.length})
                           </h2>
                         </div>
-                        <span className="text-[11px] font-mono text-muted-foreground">
-                          Facts Missing
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-mono text-muted-foreground">
+                            Facts Missing
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleAskPraptiAI(
+                                `What specific information or documents should I update for ${activeCitizen.name} to unlock more state and central schemes?`
+                              );
+                            }}
+                            className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-muted-foreground hover:text-foreground hover:underline bg-muted px-2 py-0.5 rounded border border-border cursor-pointer"
+                          >
+                            <PraptiLogo className="h-3 w-3" />
+                            <span>Ask Prapti AI: Profile Advice →</span>
+                          </button>
+                        </div>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         Additional details (such as annual income or education stream) are needed to determine your eligibility.
                       </p>
                       <div className="space-y-4">
                         {relevantNeedsInfo.map((opp) => (
-                          <OpportunityCard key={opp.schemeId} opportunity={opp} />
+                          <OpportunityCard key={opp.schemeId} opportunity={opp} onAskAI={handleAskPraptiAI} />
                         ))}
                       </div>
                     </div>
@@ -1498,6 +1585,8 @@ export function DashboardWorkspace({
                 readyDocsCount={readyDocsCount}
                 totalDocsCount={totalDocsCount}
                 onSwitchProfile={handleSwitchMember}
+                initialPrompt={aiAssistantPrompt}
+                onClearInitialPrompt={() => setAiAssistantPrompt(null)}
               />
             </div>
           ) : activeTab === 'profile_personal' ? (

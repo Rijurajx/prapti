@@ -20,14 +20,16 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LinkButton } from '@/components/ui/link-button';
+import { PraptiLogo } from '@/components/prapti-logo';
 import { toggleSaveScheme, startApplicationClaim, toggleEnrollScheme } from '@/app/schemes/actions';
 import type { MatchedSchemeOpportunity } from '@/services/matching';
 
 interface OpportunityCardProps {
   opportunity: MatchedSchemeOpportunity;
+  onAskAI?: (prompt: string) => void;
 }
 
-export function OpportunityCard({ opportunity: opp }: OpportunityCardProps) {
+export function OpportunityCard({ opportunity: opp, onAskAI }: OpportunityCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [isSaved, setIsSaved] = useState(opp.isSaved ?? false);
   const [isEnrolled, setIsEnrolled] = useState(opp.isEnrolled ?? false);
@@ -214,13 +216,29 @@ export function OpportunityCard({ opportunity: opp }: OpportunityCardProps) {
                     </li>
                   ))}
                 </ul>
-                <div className="mt-2 pt-1">
+                <div className="mt-2 pt-1 flex flex-wrap items-center gap-3">
                   <Link
                     href="/profile/documents"
-                    className="inline-flex items-center gap-1 font-bold underline hover:text-amber-900"
+                    className="inline-flex items-center gap-1 font-bold underline hover:text-amber-900 dark:hover:text-amber-100"
                   >
                     Add to your Document Inventory in Profile <ArrowRight className="h-3 w-3" />
                   </Link>
+                  {onAskAI && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const missingDocs = docReadiness.missingMandatoryDocuments
+                          .map((item) => item.requirement.documentName)
+                          .join(', ');
+                        onAskAI(
+                          `For ${opp.schemeName}, I satisfy the eligibility criteria but need to procure: ${missingDocs}. What are the official steps to get these documents, where do I apply in my state, and what alternative proofs are accepted?`
+                        );
+                      }}
+                      className="inline-flex items-center gap-1 font-bold text-amber-900 dark:text-amber-200 underline hover:opacity-80 cursor-pointer"
+                    >
+                      <PraptiLogo className="h-3 w-3" /> Ask Prapti AI how to procure →
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -322,6 +340,41 @@ export function OpportunityCard({ opportunity: opp }: OpportunityCardProps) {
             <LinkButton variant="secondary" size="sm" href={`/schemes/${opp.schemeId}`}>
               View details & rules
             </LinkButton>
+            {onAskAI && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  if (opp.assessment.outcome === 'likely_eligible' && !docReadiness.isFullyReady) {
+                    const missingDocs = docReadiness.missingMandatoryDocuments
+                      .map((item) => item.requirement.documentName)
+                      .join(', ');
+                    onAskAI(
+                      `I am likely eligible for ${opp.schemeName}, but missing required documents: ${missingDocs}. What are the exact steps to procure them and complete my application?`
+                    );
+                  } else if (opp.assessment.outcome === 'likely_eligible') {
+                    onAskAI(
+                      `I am eligible for ${opp.schemeName} and all my documents are ready! What are the exact next steps, official portal procedures, and submission guidelines?`
+                    );
+                  } else if (opp.assessment.outcome === 'needs_more_info') {
+                    const missing = opp.assessment.missingFields.join(', ');
+                    onAskAI(
+                      `For ${opp.schemeName}, what information (${missing || 'profile details'}) is required to verify my eligibility, and how can I qualify?`
+                    );
+                  } else {
+                    onAskAI(
+                      `Tell me about ${opp.schemeName}: what are the eligibility requirements, benefits, and how do I apply?`
+                    );
+                  }
+                }}
+                className="gap-1.5 font-mono text-xs font-bold"
+                title="Ask Prapti AI about this scheme"
+              >
+                <PraptiLogo className="h-3.5 w-3.5" />
+                <span>Ask Prapti AI</span>
+              </Button>
+            )}
             {opp.portalUrl && (
               <a
                 href={opp.portalUrl}
