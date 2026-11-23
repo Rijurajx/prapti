@@ -33,6 +33,7 @@ export interface MatchedSchemeOpportunity {
   assessment: SchemeAssessmentResult;
   documentReadiness: DocumentReadinessResult;
   isSaved?: boolean;
+  isEnrolled?: boolean;
   tags?: string[];
 }
 
@@ -131,7 +132,7 @@ export async function getPersonalizedOpportunities(
   supabase: ServerClient,
   citizenId: string,
 ): Promise<PersonalizedOpportunities> {
-  const [facts, inventory, schemesRes, savedRes] = await Promise.all([
+  const [facts, inventory, schemesRes, savedRes, enrolledRes] = await Promise.all([
     loadCitizenFacts(supabase, citizenId),
     loadCitizenDocumentInventory(supabase, citizenId),
     supabase
@@ -181,9 +182,11 @@ export async function getPersonalizedOpportunities(
       .eq('status', 'published')
       .not('current_version_id', 'is', null),
     supabase.from('saved_schemes').select('scheme_id').eq('citizen_id', citizenId),
+    supabase.from('citizen_enrolled_schemes').select('scheme_id').eq('citizen_id', citizenId),
   ]);
 
   const savedSchemeIds = new Set((savedRes.data ?? []).map((s: any) => s.scheme_id));
+  const enrolledSchemeIds = new Set(((enrolledRes as any)?.data ?? []).map((s: any) => s.scheme_id));
   const factsSnapshotHash = hashFacts(facts);
 
   const likelyEligible: MatchedSchemeOpportunity[] = [];
@@ -262,6 +265,7 @@ export async function getPersonalizedOpportunities(
       },
       documentReadiness: readiness,
       isSaved: savedSchemeIds.has(scheme.id),
+      isEnrolled: enrolledSchemeIds.has(scheme.id),
       tags: scheme.tags ?? [],
     };
 

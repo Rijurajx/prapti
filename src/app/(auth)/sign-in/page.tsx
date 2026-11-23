@@ -157,6 +157,16 @@ export default function SignInPage() {
           </button>
         </form>
 
+        <div className="pt-2 border-t border-border/80">
+          <Link
+            href="/demo"
+            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded border border-dashed border-foreground/50 bg-muted/40 text-xs font-mono font-bold text-foreground hover:bg-foreground hover:text-background transition-all"
+          >
+            <span>Judges Evaluation: 1-Click Demo Login</span>
+            <span className="text-sm">→</span>
+          </Link>
+        </div>
+
         <div className="border-t border-border pt-4 text-center text-xs text-muted-foreground">
           Don&apos;t have an account?{' '}
           <Link href="/sign-up" className="font-bold text-foreground hover:underline">

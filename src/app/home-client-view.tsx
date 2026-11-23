@@ -120,10 +120,11 @@ export function HomeClientView({ user }: { user: { id: string } | null }) {
                   </Link>
                 )}
                 <Link
-                  href="/how-it-works"
-                  className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wider text-foreground font-semibold hover:underline"
+                  href="/demo"
+                  className="inline-flex items-center gap-1.5 rounded-[3px] border border-foreground bg-transparent px-5 py-3 text-xs font-mono font-bold uppercase tracking-wider text-foreground hover:bg-foreground hover:text-background transition-all shadow-sm"
                 >
-                  {t('hero.seeHowItWorks')} <ChevronRight className="h-4 w-4" />
+                  <span>View Demo</span>
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
 

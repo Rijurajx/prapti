@@ -14,12 +14,13 @@ import {
   FileText,
   Clock,
   AlertCircle,
+  Plus,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LinkButton } from '@/components/ui/link-button';
-import { toggleSaveScheme, startApplicationClaim } from '@/app/schemes/actions';
+import { toggleSaveScheme, startApplicationClaim, toggleEnrollScheme } from '@/app/schemes/actions';
 import type { MatchedSchemeOpportunity } from '@/services/matching';
 
 interface OpportunityCardProps {
@@ -29,6 +30,7 @@ interface OpportunityCardProps {
 export function OpportunityCard({ opportunity: opp }: OpportunityCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [isSaved, setIsSaved] = useState(opp.isSaved ?? false);
+  const [isEnrolled, setIsEnrolled] = useState(opp.isEnrolled ?? false);
   const [isPending, startTransition] = useTransition();
   const [claimStarted, setClaimStarted] = useState(false);
 
@@ -37,6 +39,15 @@ export function OpportunityCard({ opportunity: opp }: OpportunityCardProps) {
       const res = await toggleSaveScheme(opp.schemeId);
       if (res.ok && res.isSaved !== undefined) {
         setIsSaved(res.isSaved);
+      }
+    });
+  };
+
+  const handleToggleEnroll = () => {
+    startTransition(async () => {
+      const res = await toggleEnrollScheme(opp.schemeId);
+      if (res.ok && res.isEnrolled !== undefined) {
+        setIsEnrolled(res.isEnrolled);
       }
     });
   };
@@ -112,6 +123,34 @@ export function OpportunityCard({ opportunity: opp }: OpportunityCardProps) {
             )}
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleToggleEnroll}
+              disabled={isPending}
+              className={`h-8 text-xs font-mono font-bold transition-colors ${
+                isEnrolled
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/20'
+                  : 'text-muted-foreground hover:text-foreground hover:border-foreground/40'
+              }`}
+              title={
+                isEnrolled
+                  ? 'Currently marked as enrolled/receiving. Click to unmark.'
+                  : 'Mark as already receiving / enrolled'
+              }
+            >
+              {isEnrolled ? (
+                <>
+                  <CheckCircle2 className="mr-1 h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span>Already Getting</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-1 h-3.5 w-3.5" />
+                  <span>Already Getting?</span>
+                </>
+              )}
+            </Button>
             <Button
               variant="ghost"
               size="sm"

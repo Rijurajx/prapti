@@ -41,6 +41,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { signOut } from '@/app/(auth)/actions';
+import { toggleEnrollScheme } from '@/app/schemes/actions';
 import { OpportunityCard } from '@/app/opportunities/opportunity-card';
 import { ClaimCard } from '@/app/applications/claim-card';
 import { RemindersView } from '@/app/reminders/reminders-view';
@@ -88,6 +89,7 @@ interface DashboardWorkspaceProps {
   opportunities: PersonalizedOpportunities;
   schemes: any[];
   savedSchemes: any[];
+  enrolledSchemes?: any[];
   claims: any[];
   reminders: any[];
   personalDetails: any;
@@ -110,6 +112,7 @@ export function DashboardWorkspace({
   opportunities,
   schemes,
   savedSchemes,
+  enrolledSchemes = [],
   claims,
   reminders,
   personalDetails,
@@ -125,6 +128,8 @@ export function DashboardWorkspace({
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [selectedSchemeId, setSelectedSchemeId] = useState<string | null>(null);
+  const [enrolledList, setEnrolledList] = useState<any[]>(enrolledSchemes);
+  const [isEnrollingSchemeId, setIsEnrollingSchemeId] = useState<string | null>(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [switchingProfileId, setSwitchingProfileId] = useState<string | null>(null);
@@ -176,6 +181,31 @@ export function DashboardWorkspace({
     } else {
       alert(res.error || 'Failed to switch profile');
       setSwitchingProfileId(null);
+    }
+  };
+
+  const handleToggleEnroll = async (schemeId: string) => {
+    setIsEnrollingSchemeId(schemeId);
+    try {
+      const res = await toggleEnrollScheme(schemeId);
+      if (res.ok) {
+        if (res.isEnrolled) {
+          const foundScheme = schemes.find((s) => s.id === schemeId);
+          setEnrolledList((prev) => [
+            {
+              id: 'local-' + Date.now(),
+              scheme_id: schemeId,
+              created_at: new Date().toISOString(),
+              schemes: foundScheme,
+            },
+            ...prev,
+          ]);
+        } else {
+          setEnrolledList((prev) => prev.filter((item) => item.scheme_id !== schemeId && item.schemes?.id !== schemeId));
+        }
+      }
+    } finally {
+      setIsEnrollingSchemeId(null);
     }
   };
 
@@ -291,6 +321,13 @@ export function DashboardWorkspace({
       title: 'SCHEMES & CLAIMS',
       items: [
         { id: 'schemes', label: 'Discover Schemes', icon: Search, badge: schemes.length },
+        {
+          id: 'enrolled',
+          label: 'Enrolled Schemes',
+          icon: CheckCircle2,
+          badge: enrolledList.length > 0 ? enrolledList.length : undefined,
+          badgeTone: 'success',
+        },
         {
           id: 'saved',
           label: t('dashboard.saved'),
@@ -674,16 +711,50 @@ export function DashboardWorkspace({
                   )}
                 </div>
 
-                {activeSchemeDetail.portal_url && (
-                  <a
-                    href={activeSchemeDetail.portal_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-[3px] bg-foreground px-4 py-2 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shrink-0"
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => handleToggleEnroll(activeSchemeDetail.id)}
+                    disabled={isEnrollingSchemeId === activeSchemeDetail.id}
+                    className={`h-9 text-xs font-mono font-bold transition-colors ${
+                      enrolledList.some(
+                        (e) =>
+                          e.scheme_id === activeSchemeDetail.id ||
+                          e.schemes?.id === activeSchemeDetail.id,
+                      )
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/20'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
                   >
-                    Official Portal <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
-                )}
+                    {enrolledList.some(
+                      (e) =>
+                        e.scheme_id === activeSchemeDetail.id ||
+                        e.schemes?.id === activeSchemeDetail.id,
+                    ) ? (
+                      <>
+                        <CheckCircle2 className="mr-1.5 h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <span>Already Getting</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="mr-1.5 h-3.5 w-3.5" />
+                        <span>Already Getting?</span>
+                      </>
+                    )}
+                  </Button>
+
+                  {activeSchemeDetail.portal_url && (
+                    <a
+                      href={activeSchemeDetail.portal_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-[3px] bg-foreground px-4 py-2 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shrink-0"
+                    >
+                      Official Portal <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  )}
+                </div>
               </div>
 
               {activeSchemeDetail.short_description && (
@@ -1158,24 +1229,154 @@ export function DashboardWorkspace({
                             {s.short_description}
                           </p>
                           <div className="border-t border-border pt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedSchemeId(s.id)}
+                                className="text-foreground font-bold hover:underline"
+                              >
+                                Inspect Rules & Steps →
+                              </button>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                disabled={isEnrollingSchemeId === s.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleEnroll(s.id);
+                                }}
+                                className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-mono font-bold transition-colors cursor-pointer ${
+                                  enrolledList.some((e) => e.scheme_id === s.id || e.schemes?.id === s.id)
+                                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/20'
+                                    : 'bg-muted text-muted-foreground hover:text-foreground border border-border hover:border-foreground/40'
+                                }`}
+                                title={
+                                  enrolledList.some((e) => e.scheme_id === s.id || e.schemes?.id === s.id)
+                                    ? 'Currently marked as enrolled/receiving. Click to unmark.'
+                                    : 'Mark this scheme as already receiving / enrolled'
+                                }
+                              >
+                                {enrolledList.some((e) => e.scheme_id === s.id || e.schemes?.id === s.id) ? (
+                                  <>
+                                    <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                                    <span>Already Getting</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Plus className="h-3 w-3" />
+                                    <span>Already Getting?</span>
+                                  </>
+                                )}
+                              </button>
+                              {s.portal_url && (
+                                <a
+                                  href={s.portal_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 text-[11px] font-bold text-foreground hover:underline"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  Apply <ExternalLink className="h-3 w-3" />
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ) : activeTab === 'enrolled' ? (
+            /* =========================================================================
+               TAB: ENROLLED SCHEMES (Already Getting)
+            ========================================================================= */
+            <div className="space-y-6 max-w-4xl">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground font-mono">
+                    Enrolled Schemes ({enrolledList.length})
+                  </h1>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Schemes that <strong className="text-foreground">{activeCitizen.name}</strong> ({activeCitizen.relationship}) is currently enrolled in and actively receiving benefits from.
+                  </p>
+                </div>
+                <Button size="sm" variant="secondary" onClick={() => switchTab('schemes')} className="gap-1.5 text-xs font-mono">
+                  <Plus className="h-3.5 w-3.5" /> Add Another Scheme
+                </Button>
+              </div>
+
+              {enrolledList.length === 0 ? (
+                <div className="rounded border border-dashed border-border p-8 text-center space-y-3 bg-muted/20">
+                  <div className="h-10 w-10 mx-auto rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="h-6 w-6" />
+                  </div>
+                  <p className="text-sm font-semibold">No Enrolled Schemes Recorded Yet</p>
+                  <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
+                    If {activeCitizen.name} is already receiving government benefits (such as PM-KISAN, Lakshmir Bhandar, or Old Age Pension), mark them in Discover Schemes by clicking &quot;+ Already Getting?&quot; on any scheme card.
+                  </p>
+                  <Button size="sm" onClick={() => switchTab('schemes')} className="mt-2 text-xs font-mono">
+                    Browse Schemes Directory →
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {enrolledList.map((item: any) => {
+                    const s = item.schemes ?? schemes.find((sch) => sch.id === item.scheme_id);
+                    if (!s) return null;
+                    return (
+                      <Card
+                        key={item.id || item.scheme_id}
+                        className="border-emerald-500/40 bg-card hover:shadow-sm transition-all"
+                      >
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="inline-flex items-center gap-1 rounded bg-emerald-500/10 px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                              <CheckCircle2 className="h-3 w-3" /> ACTIVE BENEFIT
+                            </span>
+                            <span className="text-[10px] uppercase font-mono text-muted-foreground">
+                              {s.jurisdiction === 'central' ? 'Central' : s.state ?? 'State'}
+                            </span>
+                          </div>
+                          <CardTitle className="text-base mt-2">
                             <button
                               type="button"
                               onClick={() => setSelectedSchemeId(s.id)}
-                              className="text-foreground font-bold hover:underline"
+                              className="text-left font-bold text-foreground hover:underline"
                             >
-                              Inspect Rules & Steps →
+                              {s.name}
                             </button>
-                            {s.portal_url && (
-                              <a
-                                href={s.portal_url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1 text-[11px] font-bold text-foreground hover:underline"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                Apply on Portal <ExternalLink className="h-3 w-3" />
-                              </a>
-                            )}
+                          </CardTitle>
+                          {s.name_bn && (
+                            <p className="font-bengali text-xs text-muted-foreground">{s.name_bn}</p>
+                          )}
+                          {s.ministry_label && (
+                            <CardDescription className="text-[11px] line-clamp-1">{s.ministry_label}</CardDescription>
+                          )}
+                        </CardHeader>
+                        <CardContent className="space-y-3 text-xs">
+                          {s.short_description && (
+                            <p className="text-muted-foreground line-clamp-2">{s.short_description}</p>
+                          )}
+                          <div className="border-t border-border/80 pt-2.5 flex items-center justify-between gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedSchemeId(s.id)}
+                              className="text-primary font-bold hover:underline text-xs"
+                            >
+                              Inspect Details →
+                            </button>
+                            <button
+                              type="button"
+                              disabled={isEnrollingSchemeId === s.id}
+                              onClick={() => handleToggleEnroll(s.id)}
+                              className="text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 text-[11px] font-mono hover:underline cursor-pointer"
+                              title="Remove from enrolled benefits"
+                            >
+                              Remove
+                            </button>
                           </div>
                         </CardContent>
                       </Card>

@@ -190,7 +190,7 @@ export default async function HowItWorksPage() {
           <div>
             <h3 className="font-bold text-sm text-foreground">Ready to discover your eligible benefits?</h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Takes less than 3 minutes to evaluate against 36 verified Central and State schemes.
+              Takes less than 3 minutes to evaluate against verified Central and State schemes.
             </p>
           </div>
           <Link

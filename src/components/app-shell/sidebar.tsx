@@ -9,6 +9,7 @@ import {
   Bookmark,
   BookOpen,
   Briefcase,
+  CheckCircle2,
   ChevronsLeft,
   ChevronsRight,
   FileText,
@@ -49,6 +50,7 @@ export const appNavSections: readonly AppNavSection[] = [
     label: 'My Benefits',
     items: [
       { href: '/schemes', label: 'Discover Schemes', icon: FileText },
+      { href: '/dashboard?tab=enrolled', label: 'Enrolled Schemes', icon: CheckCircle2 },
       { href: '/saved', label: 'Saved Schemes', icon: Bookmark },
       { href: '/applications', label: 'My Applications', icon: FileText },
       { href: '/reminders', label: 'Reminders', icon: Bell },

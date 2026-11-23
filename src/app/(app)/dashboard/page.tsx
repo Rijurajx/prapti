@@ -107,6 +107,7 @@ export default async function DashboardPage({
     opportunities,
     schemesRes,
     savedSchemesRes,
+    enrolledSchemesRes,
     claimsRes,
     remindersRes,
     personalDetails,
@@ -147,6 +148,27 @@ export default async function DashboardPage({
       .from('saved_schemes')
       .select('id, scheme_id, schemes (id, name, short_description)')
       .eq('citizen_id', citizenId),
+    supabase
+      .from('citizen_enrolled_schemes')
+      .select(`
+        id,
+        scheme_id,
+        created_at,
+        schemes (
+          id,
+          slug,
+          name,
+          name_bn,
+          category,
+          jurisdiction,
+          state,
+          portal_url,
+          short_description,
+          ministry_label
+        )
+      `)
+      .eq('citizen_id', citizenId)
+      .order('created_at', { ascending: false }),
     supabase
       .from('claims')
       .select(`
@@ -217,6 +239,7 @@ export default async function DashboardPage({
       opportunities={opportunities}
       schemes={schemesRes.data ?? []}
       savedSchemes={savedSchemesRes.data ?? []}
+      enrolledSchemes={enrolledSchemesRes.data ?? []}
       claims={claimsRes.data ?? []}
       reminders={remindersRes.data ?? []}
       personalDetails={personalDetails}

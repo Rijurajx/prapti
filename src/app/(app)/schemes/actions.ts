@@ -4,10 +4,52 @@ import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { resolveActiveCitizenId } from '@/app/profile/active-citizen';
 
-export type ActionResult = { ok: true; isSaved?: boolean } | { ok: false; error: string };
+export type ActionResult = { ok: true; isSaved?: boolean; isEnrolled?: boolean } | { ok: false; error: string };
 
 async function resolveCitizen(supabase: any, userId: string): Promise<string | null> {
   return resolveActiveCitizenId(supabase, userId);
+}
+
+export async function toggleEnrollScheme(schemeId: string): Promise<ActionResult> {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { ok: false, error: 'Database not available' };
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: 'Please sign in first' };
+
+  const citizenId = await resolveCitizen(supabase, user.id);
+  if (!citizenId) return { ok: false, error: 'Citizen profile not found' };
+
+  // Check if currently enrolled
+  const { data: existing } = await supabase
+    .from('citizen_enrolled_schemes')
+    .select('id')
+    .eq('citizen_id', citizenId)
+    .eq('scheme_id', schemeId)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await supabase
+      .from('citizen_enrolled_schemes')
+      .delete()
+      .eq('id', existing.id);
+    if (error) return { ok: false, error: 'Could not remove enrolled scheme' };
+
+    revalidatePath('/dashboard');
+    revalidatePath('/schemes');
+    revalidatePath('/opportunities');
+    return { ok: true, isEnrolled: false };
+  } else {
+    const { error } = await supabase
+      .from('citizen_enrolled_schemes')
+      .insert({ citizen_id: citizenId, scheme_id: schemeId });
+    if (error) return { ok: false, error: 'Could not mark scheme as enrolled' };
+
+    revalidatePath('/dashboard');
+    revalidatePath('/schemes');
+    revalidatePath('/opportunities');
+    return { ok: true, isEnrolled: true };
+  }
 }
 
 export async function toggleSaveScheme(schemeId: string): Promise<ActionResult> {
