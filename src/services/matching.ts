@@ -32,6 +32,7 @@ export interface MatchedSchemeOpportunity {
   assessment: SchemeAssessmentResult;
   documentReadiness: DocumentReadinessResult;
   isSaved?: boolean;
+  tags?: string[];
 }
 
 export interface PersonalizedOpportunities {
@@ -59,7 +60,7 @@ export async function loadCitizenFacts(
     agriRes,
     docRes,
   ] = await Promise.all([
-    supabase.from('citizen_profiles').select('id, full_name, is_minor').eq('id', citizenId).maybeSingle(),
+    supabase.from('citizen_profiles').select('id, full_name, is_minor, category_tags').eq('id', citizenId).maybeSingle(),
     supabase.from('citizen_personal_details').select('*').eq('citizen_id', citizenId).maybeSingle(),
     supabase.from('citizen_addresses').select('*').eq('citizen_id', citizenId),
     supabase.from('citizen_financial_profiles').select('*').eq('citizen_id', citizenId).maybeSingle(),
@@ -68,12 +69,12 @@ export async function loadCitizenFacts(
     supabase.from('citizen_agricultural_profiles').select('*').eq('citizen_id', citizenId).maybeSingle(),
     supabase
       .from('citizen_document_inventory')
-      .select('status, document_type_id, document_types(code)')
+      .select('status, document_code')
       .eq('citizen_id', citizenId),
   ]);
 
   const rawDocs = (docRes.data ?? []).map((row: any) => ({
-    document_code: row.document_types?.code,
+    document_code: row.document_code,
     status: row.status,
   }));
 
@@ -100,12 +101,12 @@ export async function loadCitizenDocumentInventory(
 ): Promise<CitizenDocumentStatus[]> {
   const { data } = await supabase
     .from('citizen_document_inventory')
-    .select('document_type_id, status, document_types(code)')
+    .select('document_code, status')
     .eq('citizen_id', citizenId);
 
   return (data ?? []).map((row: any) => ({
-    documentTypeId: row.document_type_id,
-    documentCode: row.document_types?.code ?? '',
+    documentTypeId: row.document_code,
+    documentCode: row.document_code ?? '',
     status: row.status,
   }));
 }
@@ -141,6 +142,7 @@ export async function getPersonalizedOpportunities(
         jurisdiction,
         portal_url,
         short_description,
+        tags,
         current_version_id,
         scheme_versions!schemes_current_version_fk (
           id,
@@ -160,11 +162,10 @@ export async function getPersonalizedOpportunities(
           ),
           scheme_documents (
             id,
-            document_type_id,
+            document_code,
             is_mandatory,
             notes_en,
             document_types (
-              id,
               code,
               name,
               category
@@ -205,9 +206,9 @@ export async function getPersonalizedOpportunities(
     const docRequirements: SchemeDocumentRequirement[] = (version.scheme_documents ?? []).map(
       (d: any) => ({
         id: d.id,
-        documentTypeId: d.document_type_id,
-        documentCode: d.document_types?.code ?? '',
-        documentName: d.document_types?.name ?? '',
+        documentTypeId: d.document_code,
+        documentCode: d.document_code ?? d.document_types?.code ?? '',
+        documentName: d.document_types?.name ?? d.document_code ?? '',
         category: d.document_types?.category ?? 'general',
         isMandatory: d.is_mandatory,
         notesEn: d.notes_en,
@@ -236,6 +237,7 @@ export async function getPersonalizedOpportunities(
       assessment,
       documentReadiness: readiness,
       isSaved: savedSchemeIds.has(scheme.id),
+      tags: scheme.tags ?? [],
     };
 
     switch (assessment.outcome) {
@@ -326,11 +328,10 @@ export async function getSchemeDetail(
         ),
         scheme_documents (
           id,
-          document_type_id,
+          document_code,
           is_mandatory,
           notes_en,
           document_types (
-            id,
             code,
             name,
             category
@@ -378,9 +379,9 @@ export async function getSchemeDetail(
     const docRequirements: SchemeDocumentRequirement[] = (version.scheme_documents ?? []).map(
       (d: any) => ({
         id: d.id,
-        documentTypeId: d.document_type_id,
-        documentCode: d.document_types?.code ?? '',
-        documentName: d.document_types?.name ?? '',
+        documentTypeId: d.document_code,
+        documentCode: d.document_code ?? d.document_types?.code ?? '',
+        documentName: d.document_types?.name ?? d.document_code ?? '',
         category: d.document_types?.category ?? 'general',
         isMandatory: d.is_mandatory,
         notesEn: d.notes_en,

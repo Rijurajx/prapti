@@ -247,3 +247,29 @@ export async function deleteAddress(kind: 'current' | 'permanent'): Promise<Acti
   revalidatePath('/app/profile/address');
   return { ok: true };
 }
+
+export async function updateCategoryTags(tags: string[]): Promise<ActionResult> {
+  const session = await resolveSession();
+  if (!session.ok) {
+    return session;
+  }
+
+  const cleanTags = Array.isArray(tags)
+    ? tags.map((t) => String(t).trim()).filter((t) => t.length > 0 && t.length <= 50)
+    : [];
+
+  const { error } = await session.supabase
+    .from('citizen_profiles')
+    .update({ category_tags: cleanTags })
+    .eq('id', session.citizenId);
+
+  if (error) {
+    console.error('updateCategoryTags failed', error.code);
+    return { ok: false, error: 'Could not update category tags' };
+  }
+
+  revalidatePath('/app/dashboard');
+  revalidatePath('/app/opportunities');
+  revalidatePath('/app/profile/personal');
+  return { ok: true };
+}

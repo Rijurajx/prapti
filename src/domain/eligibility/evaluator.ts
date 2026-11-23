@@ -140,7 +140,13 @@ export function evaluateComparison(
       break;
     case 'contains':
       if (Array.isArray(actual)) {
-        pass = actual.includes(expected as any);
+        if (typeof expected === 'string') {
+          pass = actual.some(
+            (v) => typeof v === 'string' && v.trim().toLowerCase() === expected.trim().toLowerCase(),
+          );
+        } else {
+          pass = actual.includes(expected as any);
+        }
       }
       break;
     case 'exists':

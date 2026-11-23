@@ -8,6 +8,7 @@ export interface RawCitizenData {
     id: string;
     full_name?: string | null;
     is_minor?: boolean | null;
+    category_tags?: string[] | null;
   } | null;
   personal?: PersonalDetails | {
     date_of_birth?: string | null;
@@ -121,6 +122,57 @@ export function compileCitizenFacts(data: RawCitizenData): FactDictionary {
   const facts: FactDictionary = {};
 
   // 1. Personal details
+  const rawTags = (data.profile as any)?.category_tags ?? (data.profile as any)?.categoryTags ?? [];
+  const tags: string[] = Array.isArray(rawTags) ? rawTags : [];
+  facts.tags = tags;
+  facts.category_tags = tags;
+
+  // Derive circumstances from category tags
+  const lowerTags = tags.map((t) => t.toLowerCase());
+  if (lowerTags.includes('st')) {
+    facts.caste_category = 'st';
+    facts.is_st = true;
+  }
+  if (lowerTags.includes('sc')) {
+    facts.caste_category = 'sc';
+    facts.is_sc = true;
+  }
+  if (lowerTags.includes('obc')) {
+    facts.caste_category = 'obc';
+    facts.is_obc = true;
+  }
+  if (lowerTags.includes('general')) {
+    facts.caste_category = 'general';
+  }
+  if (lowerTags.includes('minority')) {
+    facts.is_minority = true;
+  }
+  if (lowerTags.includes('widow')) {
+    facts.marital_status = 'widowed';
+    facts.is_widow = true;
+  }
+  if (lowerTags.includes('retired')) {
+    facts.is_retired = true;
+  }
+  if (lowerTags.includes('elderly') || lowerTags.includes('elder') || lowerTags.some((t) => t.includes('60'))) {
+    facts.is_elderly = true;
+  }
+  if (lowerTags.includes('student')) {
+    facts.is_student = true;
+  }
+  if (lowerTags.includes('farmer')) {
+    facts.operates_land = true;
+  }
+  if (lowerTags.includes('artisan')) {
+    facts.is_artisan = true;
+  }
+  if (lowerTags.includes('bpl') || lowerTags.some((t) => t.includes('low income'))) {
+    facts.is_bpl = true;
+  }
+  if (lowerTags.includes('girl') || lowerTags.includes('women')) {
+    facts.gender = 'female';
+  }
+
   const dob =
     (data.personal as any)?.dateOfBirth ??
     (data.personal as any)?.date_of_birth ??

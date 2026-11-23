@@ -28,6 +28,7 @@ export default async function PublicExplorePage({
         state,
         portal_url,
         short_description,
+        tags,
         scheme_versions!schemes_current_version_fk (
           benefit_summary_en
         )
@@ -125,6 +126,18 @@ export default async function PublicExplorePage({
                   {scheme.ministry_label && (
                     <CardDescription className="text-[11px] mt-0.5">{scheme.ministry_label}</CardDescription>
                   )}
+                  {scheme.tags && scheme.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {scheme.tags.map((tag: string) => (
+                        <span
+                          key={tag}
+                          className="rounded px-1.5 py-0.5 text-[9px] font-mono font-bold bg-muted text-foreground uppercase tracking-tight"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </CardHeader>
 
                 <CardContent className="space-y-3 pt-0">
@@ -146,7 +159,14 @@ export default async function PublicExplorePage({
                       Check Eligibility Rules <ArrowRight className="h-3 w-3" />
                     </Link>
                     {scheme.portal_url && (
-                      <span className="text-[10px] text-muted-foreground">Verified Gazette</span>
+                      <a
+                        href={scheme.portal_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-muted-foreground hover:text-foreground"
+                      >
+                        Official Portal <ExternalLink className="h-3 w-3" />
+                      </a>
                     )}
                   </div>
                 </CardContent>

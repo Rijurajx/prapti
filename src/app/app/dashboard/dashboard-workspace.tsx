@@ -55,6 +55,7 @@ import { CreateHouseholdForm } from '@/app/app/household/household-forms';
 import { updateUserSettings } from '@/app/app/settings/actions';
 import { FamilyMembersView, type FamilyMemberItem } from '@/app/app/family/family-members-view';
 import { switchActiveProfile } from '@/app/app/family/actions';
+import { CategoryTagsSelector } from '@/app/app/profile/tags-selector';
 import type { PersonalizedOpportunities } from '@/services/matching';
 
 interface NavSubItem {
@@ -73,7 +74,7 @@ interface NavCategory {
 
 interface DashboardWorkspaceProps {
   user: { id: string; email?: string; full_name?: string; preferred_language?: string };
-  activeCitizen: { id: string; name: string; relationship: string };
+  activeCitizen: { id: string; name: string; relationship: string; categoryTags?: string[] };
   familyMembers: FamilyMemberItem[];
   citizenId: string;
   initialTab?: string;
@@ -117,6 +118,8 @@ export function DashboardWorkspace({
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [switchingProfileId, setSwitchingProfileId] = useState<string | null>(null);
+  const [schemeSearchQuery, setSchemeSearchQuery] = useState('');
+  const [schemeTagFilter, setSchemeTagFilter] = useState<string>('all');
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({
     overview: true,
     schemes: true,
@@ -171,6 +174,44 @@ export function DashboardWorkspace({
   const needsInfoCount = opportunities.needsMoreInfo.length;
   const readyDocsCount = documentRows.filter((d) => d.status === 'available').length;
   const totalDocsCount = documentRows.length;
+
+  const userCategoryTags = (activeCitizen.categoryTags ?? []).map((t) => t.toLowerCase());
+
+  const filteredSchemes = schemes.filter((s) => {
+    const q = schemeSearchQuery.toLowerCase().trim();
+    const sTags: string[] = Array.isArray(s.tags) ? s.tags : [];
+    const matchesSearch =
+      !q ||
+      s.name?.toLowerCase().includes(q) ||
+      s.name_bn?.toLowerCase().includes(q) ||
+      s.short_description?.toLowerCase().includes(q) ||
+      s.ministry_label?.toLowerCase().includes(q) ||
+      sTags.some((t: string) => t.toLowerCase().includes(q));
+
+    if (!matchesSearch) return false;
+
+    if (schemeTagFilter === 'all') return true;
+    if (schemeTagFilter === 'my_profile') {
+      if (userCategoryTags.length === 0) return true;
+      return sTags.some((t: string) => userCategoryTags.includes(t.toLowerCase()));
+    }
+    if (schemeTagFilter === 'central') return s.jurisdiction === 'central';
+    if (schemeTagFilter === 'state') return s.jurisdiction === 'state';
+    if (schemeTagFilter === 'student')
+      return s.category === 'education' || sTags.includes('student') || sTags.includes('scholarship');
+    if (schemeTagFilter === 'women')
+      return s.category === 'women' || sTags.includes('women') || sTags.includes('widow') || sTags.includes('girl');
+    if (schemeTagFilter === 'pension')
+      return sTags.includes('elderly') || sTags.includes('retired') || sTags.includes('widow');
+    if (schemeTagFilter === 'caste')
+      return sTags.includes('sc') || sTags.includes('st') || sTags.includes('obc');
+    if (schemeTagFilter === 'farmer')
+      return s.category === 'agriculture' || sTags.includes('farmer');
+    if (schemeTagFilter === 'health')
+      return s.category === 'health' || sTags.includes('health');
+
+    return true;
+  });
 
   const categories: NavCategory[] = [
     {
@@ -786,52 +827,171 @@ export function DashboardWorkspace({
             <div className="space-y-6 max-w-4xl">
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                  Scheme Registry
+                  Scheme Registry ({filteredSchemes.length} of {schemes.length})
                 </h1>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Browse official state and central benefit schemes. Click any scheme to inspect rules and documents.
+                  Browse official Central and West Bengal welfare schemes and scholarships. Filter by demographic tags or your active profile.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {schemes.map((s) => (
-                  <Card
-                    key={s.id}
-                    className="flex flex-col justify-between hover:border-foreground transition-colors cursor-pointer"
-                    onClick={() => setSelectedSchemeId(s.id)}
-                  >
-                    <CardHeader>
-                      <div className="flex items-center gap-2 text-[10px] uppercase text-muted-foreground">
-                        <span className="font-semibold text-foreground">
-                          {s.jurisdiction === 'central' ? 'Central' : s.state ?? 'West Bengal'}
-                        </span>
-                        <span>•</span>
-                        <span className="capitalize">{s.category}</span>
-                      </div>
-                      <CardTitle className="text-base mt-1">{s.name}</CardTitle>
-                      {s.name_bn && (
-                        <p className="font-bengali text-xs text-muted-foreground">{s.name_bn}</p>
-                      )}
-                      {s.ministry_label && (
-                        <CardDescription className="text-[11px]">{s.ministry_label}</CardDescription>
-                      )}
-                    </CardHeader>
-                    <CardContent className="pt-0 space-y-3">
-                      <p className="line-clamp-2 text-xs text-muted-foreground">
-                        {s.short_description}
-                      </p>
-                      <div className="border-t border-border pt-2 flex items-center justify-between text-xs">
-                        <span className="text-primary font-semibold hover:underline">
-                          Inspect Rules & Steps →
-                        </span>
-                        {s.portal_url && (
-                          <span className="text-[10px] text-muted-foreground">Official Source Verified</span>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+              {/* Search & Tag Filter Bar */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      value={schemeSearchQuery}
+                      onChange={(e) => setSchemeSearchQuery(e.target.value)}
+                      placeholder="Search schemes by name, keyword, tag (e.g. SC, scholarship, widow, farmer)..."
+                      className="w-full rounded-[3px] border border-border bg-card pl-9 pr-8 py-2 text-xs font-mono text-foreground focus:outline-none focus:border-foreground"
+                    />
+                    {schemeSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setSchemeSearchQuery('')}
+                        className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tag Filter Pills */}
+                <div className="flex flex-wrap gap-1.5 text-xs">
+                  {[
+                    { id: 'all', label: `All Schemes (${schemes.length})` },
+                    ...(userCategoryTags.length > 0
+                      ? [
+                          {
+                            id: 'my_profile',
+                            label: `★ My Active Tags (${userCategoryTags.map((t) => '#' + t.toUpperCase()).join(' ')})`,
+                          },
+                        ]
+                      : []),
+                    { id: 'student', label: 'Students & Scholarships' },
+                    { id: 'women', label: 'Women & Widows' },
+                    { id: 'pension', label: 'Elderly & Pensions' },
+                    { id: 'caste', label: 'SC / ST / OBC' },
+                    { id: 'farmer', label: 'Farmers' },
+                    { id: 'health', label: 'Healthcare' },
+                    { id: 'central', label: 'Central Schemes' },
+                    { id: 'state', label: 'West Bengal' },
+                  ].map((chip) => {
+                    const isSelected = schemeTagFilter === chip.id;
+                    return (
+                      <button
+                        key={chip.id}
+                        type="button"
+                        onClick={() => setSchemeTagFilter(chip.id)}
+                        className={`rounded px-2.5 py-1 text-xs font-bold uppercase transition-all ${
+                          isSelected
+                            ? 'bg-foreground text-background shadow-sm'
+                            : 'bg-muted/50 hover:bg-muted text-foreground/80 hover:text-foreground border border-border'
+                        }`}
+                      >
+                        {chip.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+
+              {filteredSchemes.length === 0 ? (
+                <div className="rounded border border-dashed border-border p-8 text-center text-xs space-y-2">
+                  <p className="font-bold text-foreground">No schemes found matching &quot;{schemeSearchQuery}&quot;</p>
+                  <p className="text-muted-foreground">Try clearing your search query or switching to &quot;All Schemes&quot;.</p>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setSchemeSearchQuery('');
+                      setSchemeTagFilter('all');
+                    }}
+                    className="mt-2 text-xs"
+                  >
+                    Reset Filters
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {filteredSchemes.map((s) => {
+                    const sTags: string[] = Array.isArray(s.tags) ? s.tags : [];
+                    return (
+                      <Card
+                        key={s.id}
+                        className="flex flex-col justify-between hover:border-foreground transition-colors"
+                      >
+                        <CardHeader className="pb-2">
+                          <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] uppercase text-muted-foreground">
+                            <span className="font-black text-foreground">
+                              {s.jurisdiction === 'central' ? 'Central Scheme' : s.state ?? 'West Bengal'}
+                            </span>
+                            <span className="capitalize px-1.5 py-0.5 rounded bg-muted/60 text-foreground font-semibold">
+                              {s.category}
+                            </span>
+                          </div>
+                          <CardTitle className="text-base mt-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedSchemeId(s.id)}
+                              className="text-left font-bold text-foreground hover:underline"
+                            >
+                              {s.name}
+                            </button>
+                          </CardTitle>
+                          {s.name_bn && (
+                            <p className="font-bengali text-xs text-muted-foreground">{s.name_bn}</p>
+                          )}
+                          {s.ministry_label && (
+                            <CardDescription className="text-[11px] line-clamp-1">{s.ministry_label}</CardDescription>
+                          )}
+
+                          {/* Tag Badges */}
+                          {sTags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {sTags.map((tag) => (
+                                <span
+                                  key={tag}
+                                  className="rounded px-1.5 py-0.5 text-[9px] font-mono font-bold bg-muted text-foreground uppercase tracking-tight"
+                                >
+                                  #{tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </CardHeader>
+                        <CardContent className="pt-0 space-y-3">
+                          <p className="line-clamp-2 text-xs text-muted-foreground">
+                            {s.short_description}
+                          </p>
+                          <div className="border-t border-border pt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedSchemeId(s.id)}
+                              className="text-foreground font-bold hover:underline"
+                            >
+                              Inspect Rules & Steps →
+                            </button>
+                            {s.portal_url && (
+                              <a
+                                href={s.portal_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-[11px] font-bold text-foreground hover:underline"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                Apply on Portal <ExternalLink className="h-3 w-3" />
+                              </a>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           ) : activeTab === 'saved' ? (
             /* =========================================================================
@@ -942,13 +1102,20 @@ export function DashboardWorkspace({
             <div className="space-y-6 max-w-3xl">
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                  Personal Details & Residential Address
+                  Personal Details, Identity Tags & Address
                 </h1>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Used exclusively to evaluate age, gender, marital status, and state domicile eligibility rules.
+                  Active Beneficiary: <strong className="text-foreground">{activeCitizen.name}</strong> ({activeCitizen.relationship}).
+                  Category tags inform deterministic rule matching across 17+ central and state schemes.
                 </p>
               </div>
-              <PersonalDetailsForm initial={personalDetails} />
+
+              {/* Interactive Category & Identity Tags Selector */}
+              <CategoryTagsSelector activeCitizen={activeCitizen} />
+
+              <div className="pt-2">
+                <PersonalDetailsForm initial={personalDetails} />
+              </div>
               <div className="pt-6 border-t border-border">
                 <AddressForm kind="current" initial={addresses?.current ?? null} />
               </div>

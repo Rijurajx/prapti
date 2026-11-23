@@ -93,6 +93,18 @@ export function OpportunityCard({ opportunity: opp }: OpportunityCardProps) {
             {opp.ministryLabel && (
               <CardDescription className="mt-1 text-xs">{opp.ministryLabel}</CardDescription>
             )}
+            {opp.tags && opp.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {opp.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded px-1.5 py-0.5 text-[10px] font-mono font-bold bg-muted/80 text-foreground uppercase tracking-tight"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -229,7 +241,7 @@ export function OpportunityCard({ opportunity: opp }: OpportunityCardProps) {
 
         {/* Actions */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <LinkButton variant="secondary" size="sm" href={`/app/schemes/${opp.schemeId}`}>
               View details & rules
             </LinkButton>
@@ -238,9 +250,9 @@ export function OpportunityCard({ opportunity: opp }: OpportunityCardProps) {
                 href={opp.portalUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold font-mono uppercase bg-foreground text-background hover:bg-black rounded-[3px] transition-colors shadow-sm"
               >
-                Official portal <ExternalLink className="h-3 w-3" />
+                Apply on Official Portal <ExternalLink className="h-3.5 w-3.5" />
               </a>
             )}
           </div>

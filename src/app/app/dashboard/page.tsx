@@ -48,6 +48,7 @@ export default async function DashboardPage({
         id,
         display_name,
         relationship_to_owner,
+        category_tags,
         created_at,
         citizen_personal_details (date_of_birth, gender),
         citizen_addresses (state, district)
@@ -93,6 +94,7 @@ export default async function DashboardPage({
     name: c.display_name,
     relationship: c.relationship_to_owner,
     isSelf: c.relationship_to_owner === 'self',
+    categoryTags: c.category_tags ?? [],
     dateOfBirth: c.citizen_personal_details?.[0]?.date_of_birth ?? c.citizen_personal_details?.date_of_birth ?? null,
     gender: c.citizen_personal_details?.[0]?.gender ?? c.citizen_personal_details?.gender ?? null,
     district: c.citizen_addresses?.[0]?.district ?? null,
@@ -204,6 +206,7 @@ export default async function DashboardPage({
         id: activeCitizenRow.id,
         name: activeCitizenRow.display_name,
         relationship: activeCitizenRow.relationship_to_owner,
+        categoryTags: activeCitizenRow.category_tags ?? [],
       }}
       familyMembers={familyMembers}
       citizenId={citizenId}

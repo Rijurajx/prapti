@@ -23,6 +23,7 @@ export interface FamilyMemberItem {
   name: string;
   relationship: string;
   isSelf: boolean;
+  categoryTags?: string[];
   dateOfBirth?: string | null;
   gender?: string | null;
   district?: string | null;
@@ -326,6 +327,18 @@ export function FamilyMembersView({
                   <CardDescription className="text-xs">
                     {member.isSelf ? 'Primary Account Holder' : `Family Dependant (${member.relationship})`}
                   </CardDescription>
+                  {member.categoryTags && member.categoryTags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {member.categoryTags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded px-1.5 py-0.5 text-[9px] font-mono font-bold bg-muted text-foreground uppercase tracking-tight"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </CardHeader>
 
                 <CardContent className="pt-0 space-y-3">
