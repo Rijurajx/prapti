@@ -99,7 +99,7 @@ export default async function PublicExplorePage() {
             <ThemeToggle />
             <Link
               href="/demo"
-              className="rounded-full border border-foreground/40 bg-muted/40 hover:bg-foreground hover:text-background px-3 py-1 text-[11px] font-mono font-bold uppercase tracking-wider transition-all shadow-sm shrink-0"
+              className="hidden sm:inline-flex rounded-full border border-foreground/40 bg-muted/40 hover:bg-foreground hover:text-background px-3 py-1 text-[11px] font-mono font-bold uppercase tracking-wider transition-all shadow-sm shrink-0"
             >
               View Demo
             </Link>
