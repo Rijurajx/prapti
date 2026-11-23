@@ -323,11 +323,11 @@ export function AssistantChat({
             <button
               type="button"
               onClick={() => setMemberDropdownOpen(!memberDropdownOpen)}
-              className="bg-foreground text-background font-mono font-bold text-[11px] uppercase px-2.5 py-1 rounded-[3px] flex items-center gap-1.5 hover:bg-black/90 dark:hover:bg-white/90 dark:hover:text-black transition-colors shadow-sm cursor-pointer border border-foreground"
+              className="bg-foreground text-background font-mono font-bold text-[11px] px-2.5 py-1 rounded-[3px] flex items-center gap-1.5 hover:bg-black/90 dark:hover:bg-white/90 dark:hover:text-black transition-colors shadow-sm cursor-pointer border border-foreground"
               title="Switch Active Beneficiary Context"
             >
               <User className="h-3 w-3 shrink-0" />
-              <span>[USER: {activeCitizen.name.toUpperCase()} ({activeCitizen.relationship.toUpperCase()})]</span>
+              <span>{activeCitizen.name} ({activeCitizen.relationship.toLowerCase()})</span>
               {familyMembers.length > 1 && (
                 <ChevronDown className="h-3 w-3 shrink-0" />
               )}

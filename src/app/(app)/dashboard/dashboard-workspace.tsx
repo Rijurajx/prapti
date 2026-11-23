@@ -583,17 +583,17 @@ export function DashboardWorkspace({
               <button
                 type="button"
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                className="bg-foreground text-background font-mono font-bold text-[11px] sm:text-xs uppercase px-2 py-1 sm:px-3 sm:py-1.5 rounded-[3px] flex items-center gap-1 hover:bg-black/90 dark:hover:bg-white/90 dark:hover:text-black transition-colors shadow-sm cursor-pointer border border-foreground"
+                className="bg-foreground text-background font-mono font-bold text-[11px] sm:text-xs px-2 py-1 sm:px-3 sm:py-1.5 rounded-[3px] flex items-center gap-1.5 hover:bg-black/90 dark:hover:bg-white/90 dark:hover:text-black transition-colors shadow-sm cursor-pointer border border-foreground"
                 title="Switch Beneficiary Profile"
               >
                 <User className="h-3.5 w-3.5 shrink-0" />
-                {/* Mobile version: compact first name */}
-                <span className="inline sm:hidden truncate max-w-[65px] font-bold">
-                  {firstName}
+                {/* Mobile version: compact name (relation) */}
+                <span className="inline sm:hidden truncate max-w-[120px] font-bold">
+                  {activeCitizen.name} ({activeCitizen.relationship.toLowerCase()})
                 </span>
-                {/* Desktop version: full [USER: NAME (RELATION)] */}
-                <span className="hidden sm:inline truncate max-w-[140px] sm:max-w-[240px]">
-                  [USER: {activeCitizen.name.toUpperCase()} ({activeCitizen.relationship.toUpperCase()})]
+                {/* Desktop version: Name (designation/relation) */}
+                <span className="hidden sm:inline truncate max-w-[260px] font-bold">
+                  {activeCitizen.name} ({activeCitizen.relationship.toLowerCase()})
                 </span>
                 <ChevronDown
                   className={`h-3 w-3 shrink-0 transition-transform duration-150 ${
@@ -1467,7 +1467,7 @@ export function DashboardWorkspace({
                   Deadlines & Reminders
                 </h1>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Manage application deadlines, institutional submission dates, and Duare Sarkar camp visits.
+                  Manage application deadlines, institutional submission dates, and renewal reminders.
                 </p>
               </div>
               <RemindersView reminders={reminders} />

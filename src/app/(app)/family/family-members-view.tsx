@@ -150,7 +150,7 @@ export function FamilyMembersView({
             </span>
           </div>
           <div className="text-base sm:text-lg font-bold text-foreground">
-            USER: {activeCitizen.name.toUpperCase()} ({activeCitizen.relationship.toUpperCase()})
+            Active: {activeCitizen.name} ({activeCitizen.relationship.toLowerCase()})
           </div>
           <p className="text-xs text-muted-foreground">
             The dashboard, matching schemes, and documents currently shown belong to this family profile.
