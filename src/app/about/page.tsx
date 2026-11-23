@@ -22,8 +22,8 @@ export default async function AboutPage() {
     <div className="min-h-screen bg-background text-foreground font-mono flex flex-col selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black">
       {/* Top Navbar */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-2.5">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-2.5 shrink-0">
             <div className="flex items-center gap-0.5 text-foreground">
               <span className="inline-block h-3.5 w-3.5 bg-foreground" />
               <div className="flex flex-col gap-0.5">
@@ -34,9 +34,6 @@ export default async function AboutPage() {
             <Link href="/" className="font-mono text-base font-bold tracking-tight text-foreground">
               PRAPTI
             </Link>
-            <span className="text-[10px] text-muted-foreground ml-2 uppercase hidden sm:inline">
-              {'//'} Mission &amp; Principles
-            </span>
           </div>
 
           <nav className="hidden md:flex items-center gap-6 text-xs text-muted-foreground uppercase tracking-wider">
@@ -64,7 +61,7 @@ export default async function AboutPage() {
             </a>
           </nav>
 
-          <div className="flex items-center gap-2.5 sm:gap-4 md:gap-5">
+          <div className="flex items-center gap-2.5 sm:gap-3.5 md:gap-4 shrink-0">
             <LanguageSwitcher />
             <ThemeToggle />
             <Link

@@ -6,15 +6,12 @@ export default function TermsOfUsePage() {
     <div className="min-h-screen bg-background text-foreground font-mono flex flex-col selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black">
       {/* Top Navbar */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-2">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-2 shrink-0">
             <span className="inline-block h-3 w-3 bg-foreground" />
             <Link href="/" className="font-mono text-base font-bold tracking-tight text-foreground">
               PRAPTI
             </Link>
-            <span className="text-[10px] text-muted-foreground ml-2 uppercase hidden sm:inline">
-              {'//'} Terms of Advisory Service
-            </span>
           </div>
 
           <div className="flex items-center gap-2.5">
