@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import {
   ArrowRight,
   ShieldCheck,
@@ -12,7 +13,14 @@ import {
   ChevronRight,
 } from 'lucide-react';
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createSupabaseServerClient();
+  let user = null;
+  if (supabase) {
+    const { data } = await supabase.auth.getUser();
+    user = data?.user ?? null;
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground font-mono antialiased selection:bg-black selection:text-white">
       {/* Top Navigation */}
@@ -48,18 +56,29 @@ export default function HomePage() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <Link
-              href="/auth/sign-in"
-              className="text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground hidden sm:block"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/auth/sign-up"
-              className="rounded-[3px] bg-foreground px-4 py-2 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shadow-sm"
-            >
-              Get Started
-            </Link>
+            {user ? (
+              <Link
+                href="/app/dashboard"
+                className="rounded-[3px] bg-foreground px-4 py-2 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shadow-sm flex items-center gap-1.5"
+              >
+                Dashboard →
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/auth/sign-in"
+                  className="text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground hidden sm:block"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/auth/sign-up"
+                  className="rounded-[3px] bg-foreground px-4 py-2 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shadow-sm"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -83,12 +102,21 @@ export default function HomePage() {
               </p>
 
               <div className="flex flex-wrap items-center gap-4 pt-2">
-                <Link
-                  href="/auth/sign-up"
-                  className="rounded-[3px] bg-foreground px-6 py-3 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shadow-sm"
-                >
-                  Get Started
-                </Link>
+                {user ? (
+                  <Link
+                    href="/app/dashboard"
+                    className="rounded-[3px] bg-foreground px-6 py-3 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shadow-sm inline-flex items-center gap-2"
+                  >
+                    Go to Dashboard →
+                  </Link>
+                ) : (
+                  <Link
+                    href="/auth/sign-up"
+                    className="rounded-[3px] bg-foreground px-6 py-3 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shadow-sm"
+                  >
+                    Get Started
+                  </Link>
+                )}
                 <Link
                   href="/how-it-works"
                   className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wider text-foreground font-semibold hover:underline"
@@ -101,7 +129,7 @@ export default function HomePage() {
               <div className="pt-4 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
                 <div className="inline-flex items-center gap-1.5 rounded border border-border bg-card px-2.5 py-1">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>WEST BENGAL PILOT // 6 VERIFIED SCHEMES</span>
+                  <span>17 VERIFIED SCHEMES // CENTRAL & STATE</span>
                 </div>
                 <div className="inline-flex items-center gap-1.5 rounded border border-border bg-card px-2.5 py-1">
                   <ShieldCheck className="h-3 w-3 text-foreground" />

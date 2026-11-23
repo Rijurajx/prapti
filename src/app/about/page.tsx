@@ -1,6 +1,14 @@
 import Link from 'next/link';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const supabase = await createSupabaseServerClient();
+  let user = null;
+  if (supabase) {
+    const { data } = await supabase.auth.getUser();
+    user = data?.user ?? null;
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground font-mono flex flex-col">
       {/* Top Navbar */}
@@ -17,18 +25,29 @@ export default function AboutPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link
-              href="/auth/sign-in"
-              className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/auth/sign-up"
-              className="bg-foreground text-background px-3 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-foreground/90 transition-colors"
-            >
-              Get Started →
-            </Link>
+            {user ? (
+              <Link
+                href="/app/dashboard"
+                className="bg-foreground text-background px-3 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-foreground/90 transition-colors"
+              >
+                Dashboard →
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/auth/sign-in"
+                  className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/auth/sign-up"
+                  className="bg-foreground text-background px-3 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-foreground/90 transition-colors"
+                >
+                  Get Started →
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
