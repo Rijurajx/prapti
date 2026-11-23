@@ -76,12 +76,16 @@ export default function SignInPage() {
               autoComplete="email"
               aria-invalid={errors.email ? 'true' : 'false'}
               aria-describedby={errors.email ? 'email-error' : undefined}
-              className="w-full border border-border bg-background px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground"
+              className={`w-full border bg-background px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none ${
+                errors.email
+                  ? 'border-red-500 focus:border-red-500'
+                  : 'border-border focus:border-foreground'
+              }`}
               placeholder="citizen@example.in"
               {...register('email')}
             />
             {errors.email && (
-              <p id="email-error" role="alert" className="text-xs text-destructive">
+              <p id="email-error" role="alert" className="text-xs text-red-600 dark:text-red-400 font-semibold mt-1">
                 {errors.email.message}
               </p>
             )}
@@ -102,19 +106,27 @@ export default function SignInPage() {
               autoComplete="current-password"
               aria-invalid={errors.password ? 'true' : 'false'}
               aria-describedby={errors.password ? 'password-error' : undefined}
-              className="w-full border border-border bg-background px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground"
+              className={`w-full border bg-background px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none ${
+                errors.password
+                  ? 'border-red-500 focus:border-red-500'
+                  : 'border-border focus:border-foreground'
+              }`}
               {...register('password')}
             />
             {errors.password && (
-              <p id="password-error" role="alert" className="text-xs text-destructive">
+              <p id="password-error" role="alert" className="text-xs text-red-600 dark:text-red-400 font-semibold mt-1">
                 {errors.password.message}
               </p>
             )}
           </div>
 
           {serverError && (
-            <div className="border border-destructive/50 bg-destructive/10 p-2.5 text-xs text-destructive">
-              {serverError}
+            <div
+              role="alert"
+              className="border-2 border-red-500 bg-red-50 dark:bg-red-950/60 p-3 text-xs text-red-700 dark:text-red-300 font-semibold rounded-[3px] flex items-start gap-2 shadow-sm"
+            >
+              <span className="font-bold shrink-0">⚠️ ERROR:</span>
+              <span>{serverError}</span>
             </div>
           )}
 

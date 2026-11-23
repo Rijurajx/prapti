@@ -2,14 +2,17 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signUpSchema, type SignUpInput } from '@/lib/validation/auth';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { t } from '@/lib/i18n/messages';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { AlertCircle } from 'lucide-react';
 
 export default function SignUpPage() {
+  const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const {
@@ -21,25 +24,33 @@ export default function SignUpPage() {
   const onSubmit = async (values: SignUpInput) => {
     setServerError(null);
     setNotice(null);
-    const supabase = createSupabaseBrowserClient();
-    if (!supabase) {
-      setServerError(t('en', 'notConfigured'));
-      return;
-    }
-    const { data, error } = await supabase.auth.signUp({
-      email: values.email,
-      password: values.password,
-      options: {
-        data: { full_name: values.fullName },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    if (error) {
-      setServerError(error.message);
-      return;
-    }
-    if (!data.session) {
-      setNotice('Confirmation link sent! Please check your email to verify your citizen account, then sign in.');
+    try {
+      const supabase = createSupabaseBrowserClient();
+      if (!supabase) {
+        setServerError(t('en', 'notConfigured'));
+        return;
+      }
+      const { data, error } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: {
+          data: { full_name: values.fullName },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) {
+        setServerError(error.message);
+        return;
+      }
+      if (data.session) {
+        router.push('/dashboard');
+        return;
+      }
+      if (!data.session) {
+        setNotice('Confirmation link sent! Please check your email to verify your citizen account, then sign in.');
+      }
+    } catch (err: any) {
+      setServerError(err?.message || 'An unexpected error occurred during account creation.');
     }
   };
 
@@ -86,6 +97,7 @@ export default function SignUpPage() {
           </div>
         ) : (
           <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {/* Full Name */}
             <div className="space-y-1.5">
               <label htmlFor="fullName" className="text-xs uppercase font-bold tracking-wider text-muted-foreground">
                 {t('en', 'fullName')}
@@ -96,17 +108,22 @@ export default function SignUpPage() {
                 autoComplete="name"
                 aria-invalid={errors.fullName ? 'true' : 'false'}
                 aria-describedby={errors.fullName ? 'fullName-error' : undefined}
-                className="w-full border border-border bg-background px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground"
+                className={`w-full border bg-background px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none ${
+                  errors.fullName
+                    ? 'border-red-500 focus:border-red-500'
+                    : 'border-border focus:border-foreground'
+                }`}
                 placeholder="Full Legal Name"
                 {...register('fullName')}
               />
               {errors.fullName && (
-                <p id="fullName-error" role="alert" className="text-xs text-destructive">
+                <p id="fullName-error" role="alert" className="text-xs text-red-600 dark:text-red-400 font-semibold mt-1">
                   {errors.fullName.message}
                 </p>
               )}
             </div>
 
+            {/* Email */}
             <div className="space-y-1.5">
               <label htmlFor="email" className="text-xs uppercase font-bold tracking-wider text-muted-foreground">
                 {t('en', 'email')}
@@ -117,17 +134,22 @@ export default function SignUpPage() {
                 autoComplete="email"
                 aria-invalid={errors.email ? 'true' : 'false'}
                 aria-describedby={errors.email ? 'email-error' : undefined}
-                className="w-full border border-border bg-background px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground"
+                className={`w-full border bg-background px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none ${
+                  errors.email
+                    ? 'border-red-500 focus:border-red-500'
+                    : 'border-border focus:border-foreground'
+                }`}
                 placeholder="citizen@example.in"
                 {...register('email')}
               />
               {errors.email && (
-                <p id="email-error" role="alert" className="text-xs text-destructive">
+                <p id="email-error" role="alert" className="text-xs text-red-600 dark:text-red-400 font-semibold mt-1">
                   {errors.email.message}
                 </p>
               )}
             </div>
 
+            {/* Password */}
             <div className="space-y-1.5">
               <label htmlFor="password" className="text-xs uppercase font-bold tracking-wider text-muted-foreground">
                 {t('en', 'password')}
@@ -138,26 +160,67 @@ export default function SignUpPage() {
                 autoComplete="new-password"
                 aria-invalid={errors.password ? 'true' : 'false'}
                 aria-describedby={errors.password ? 'password-error' : undefined}
-                className="w-full border border-border bg-background px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground"
+                className={`w-full border bg-background px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none ${
+                  errors.password
+                    ? 'border-red-500 focus:border-red-500'
+                    : 'border-border focus:border-foreground'
+                }`}
+                placeholder="Minimum 8 chars (1 letter, 1 number)"
                 {...register('password')}
               />
               {errors.password && (
-                <p id="password-error" role="alert" className="text-xs text-destructive">
+                <p id="password-error" role="alert" className="text-xs text-red-600 dark:text-red-400 font-semibold mt-1">
                   {errors.password.message}
                 </p>
               )}
             </div>
 
+            {/* Confirm Password */}
+            <div className="space-y-1.5">
+              <label htmlFor="confirmPassword" className="text-xs uppercase font-bold tracking-wider text-muted-foreground">
+                {t('en', 'confirmPassword')}
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                aria-invalid={errors.confirmPassword ? 'true' : 'false'}
+                aria-describedby={errors.confirmPassword ? 'confirmPassword-error' : undefined}
+                className={`w-full border bg-background px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none ${
+                  errors.confirmPassword
+                    ? 'border-red-500 focus:border-red-500'
+                    : 'border-border focus:border-foreground'
+                }`}
+                placeholder="Re-enter password"
+                {...register('confirmPassword')}
+              />
+              {errors.confirmPassword && (
+                <p id="confirmPassword-error" role="alert" className="text-xs text-red-600 dark:text-red-400 font-semibold mt-1">
+                  {errors.confirmPassword.message}
+                </p>
+              )}
+            </div>
+
+            {/* Server Error Notification in High-Contrast Red */}
             {serverError && (
-              <div className="border border-destructive/50 bg-destructive/10 p-2.5 text-xs text-destructive">
-                {serverError}
+              <div
+                role="alert"
+                className="border-2 border-red-500 bg-red-50 dark:bg-red-950/60 p-3 text-xs text-red-700 dark:text-red-300 font-semibold rounded-[3px] flex items-start gap-2 shadow-sm"
+              >
+                <AlertCircle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p className="font-bold uppercase tracking-wider text-red-800 dark:text-red-200">
+                    {'//'} Error
+                  </p>
+                  <p className="text-red-700 dark:text-red-300">{serverError}</p>
+                </div>
               </div>
             )}
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-foreground text-background py-2.5 px-4 text-xs font-bold uppercase tracking-wider hover:bg-foreground/90 disabled:opacity-50 transition-colors"
+              className="w-full bg-foreground text-background py-2.5 px-4 text-xs font-bold uppercase tracking-wider hover:bg-foreground/90 disabled:opacity-50 transition-colors cursor-pointer"
             >
               {isSubmitting ? 'Creating Profile...' : t('en', 'signUp')}
             </button>
