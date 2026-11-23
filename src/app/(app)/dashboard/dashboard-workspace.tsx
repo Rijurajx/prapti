@@ -1245,13 +1245,21 @@ export function DashboardWorkspace({
             <div className="space-y-6 max-w-4xl">
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                  AI Benefits Assistant
+                  AI Benefits Companion &amp; RAG Advisor
                 </h1>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Describe your personal circumstances naturally in English or Bengali. Facts are confirmed by you before saving.
+                  Context-aware assistant for <strong className="text-foreground">{activeCitizen.name}</strong> ({activeCitizen.relationship}). Ask why you qualify, why you are not eligible, what documents you need, or update facts in plain English or Bengali.
                 </p>
               </div>
-              <AssistantChat />
+              <AssistantChat
+                activeCitizen={activeCitizen}
+                familyMembers={familyMembers}
+                citizenState={citizenState}
+                eligibleCount={eligibleCount}
+                readyDocsCount={readyDocsCount}
+                totalDocsCount={totalDocsCount}
+                onSwitchProfile={handleSwitchMember}
+              />
             </div>
           ) : activeTab === 'profile_personal' ? (
             /* =========================================================================
