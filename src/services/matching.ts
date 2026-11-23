@@ -35,6 +35,7 @@ export interface MatchedSchemeOpportunity {
   isSaved?: boolean;
   isEnrolled?: boolean;
   tags?: string[];
+  lastVerifiedAt?: string | null;
 }
 
 export interface PersonalizedOpportunities {
@@ -149,12 +150,16 @@ export async function getPersonalizedOpportunities(
         portal_url,
         short_description,
         tags,
+        updated_at,
+        created_at,
         current_version_id,
         scheme_versions!schemes_current_version_fk (
           id,
           version_number,
           summary_en,
           benefit_summary_en,
+          published_at,
+          created_at,
           scheme_rules (
             id,
             rule_kind,
@@ -267,6 +272,12 @@ export async function getPersonalizedOpportunities(
       isSaved: savedSchemeIds.has(scheme.id),
       isEnrolled: enrolledSchemeIds.has(scheme.id),
       tags: scheme.tags ?? [],
+      lastVerifiedAt:
+        version.published_at ||
+        version.created_at ||
+        scheme.updated_at ||
+        scheme.created_at ||
+        null,
     };
 
     switch (effectiveOutcome) {

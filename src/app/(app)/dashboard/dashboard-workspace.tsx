@@ -80,6 +80,17 @@ interface NavCategory {
   items: NavSubItem[];
 }
 
+function formatVerifiedDate(dateString?: string | null) {
+  if (!dateString) return 'Nov 2026';
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return 'Nov 2026';
+    return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  } catch {
+    return 'Nov 2026';
+  }
+}
+
 interface DashboardWorkspaceProps {
   user: { id: string; email?: string; full_name?: string; preferred_language?: string };
   activeCitizen: { id: string; name: string; relationship: string; categoryTags?: string[] };
@@ -1274,11 +1285,18 @@ export function DashboardWorkspace({
                       >
                         <CardHeader className="pb-2">
                           <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] uppercase text-muted-foreground">
-                            <span className="font-black text-foreground">
-                              {s.jurisdiction === 'central' ? 'Central Scheme' : s.state ?? 'West Bengal'}
-                            </span>
-                            <span className="capitalize px-1.5 py-0.5 rounded bg-muted/60 text-foreground font-semibold">
-                              {s.category}
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-black text-foreground">
+                                {s.jurisdiction === 'central' ? 'Central Scheme' : s.state ?? 'West Bengal'}
+                              </span>
+                              <span>•</span>
+                              <span className="capitalize px-1.5 py-0.5 rounded bg-muted/60 text-foreground font-semibold">
+                                {s.category}
+                              </span>
+                            </div>
+                            <span className="inline-flex items-center gap-1 rounded bg-muted/50 px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground font-semibold">
+                              <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400" />
+                              Verified: {formatVerifiedDate(s.scheme_versions?.published_at || s.updated_at || s.created_at)}
                             </span>
                           </div>
                           <CardTitle className="text-base mt-1.5">

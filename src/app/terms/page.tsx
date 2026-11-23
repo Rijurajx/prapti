@@ -72,8 +72,16 @@ export default function TermsOfUsePage() {
         </div>
       </main>
 
-      <footer className="border-t border-border py-4 text-center text-xs text-muted-foreground">
-        PRAPTI // Transparent Citizen Welfare Discovery
+      <footer className="border-t border-border py-6 text-xs text-muted-foreground bg-card/40">
+        <div className="mx-auto max-w-4xl px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <span>PRAPTI // Transparent Citizen Welfare Discovery</span>
+          <a
+            href="mailto:rijurajdatta8@gmail.com"
+            className="hover:text-foreground font-bold underline"
+          >
+            Contact Us: rijurajdatta8@gmail.com
+          </a>
+        </div>
       </footer>
     </div>
   );

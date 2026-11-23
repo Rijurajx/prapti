@@ -135,10 +135,15 @@ export default async function DashboardPage({
         state,
         portal_url,
         short_description,
+        tags,
+        updated_at,
+        created_at,
         scheme_versions!schemes_current_version_fk (
           id,
           version_number,
-          benefit_summary_en
+          benefit_summary_en,
+          published_at,
+          created_at
         )
       `)
       .eq('status', 'published')

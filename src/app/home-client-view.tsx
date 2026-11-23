@@ -13,6 +13,9 @@ import {
   Sprout,
   Heart,
   Landmark,
+  Github,
+  Mail,
+  CheckCircle2,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageSwitcher } from '@/components/language-switcher';
@@ -40,9 +43,6 @@ export function HomeClientView({ user }: { user: { id: string } | null }) {
           </div>
 
           <nav className="hidden md:flex items-center gap-6 text-xs text-muted-foreground uppercase tracking-wider">
-            <Link href="#features" className="hover:text-foreground transition-colors">
-              {t('nav.features')}
-            </Link>
             <Link href="/how-it-works" className="hover:text-foreground transition-colors">
               {t('nav.howItWorks')}
             </Link>
@@ -52,20 +52,50 @@ export function HomeClientView({ user }: { user: { id: string } | null }) {
             <Link href="/about" className="hover:text-foreground transition-colors">
               {t('nav.about')}
             </Link>
+            <Link href="/future-expansion" className="hover:text-foreground transition-colors">
+              {t('nav.futureExpansion')}
+            </Link>
+            <a
+              href="https://github.com/Rijurajx/prapti"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              title="GitHub Repository"
+              aria-label="GitHub Repository"
+            >
+              <Github className="h-4 w-4" />
+            </a>
           </nav>
 
-          <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
+          <div className="flex items-center gap-2.5 sm:gap-3.5 md:gap-4">
             <LanguageSwitcher />
             <ThemeToggle />
+            <a
+              href="https://github.com/Rijurajx/prapti"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="md:hidden text-muted-foreground hover:text-foreground transition-colors p-1"
+              title="GitHub Repository"
+              aria-label="GitHub Repository"
+            >
+              <Github className="h-4 w-4" />
+            </a>
+            <Link
+              href="/demo"
+              className="rounded-full border border-foreground/40 bg-muted/40 hover:bg-foreground hover:text-background px-3 py-1 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider transition-all shadow-sm shrink-0"
+              title="Interactive 3-Citizen Demo"
+            >
+              View Demo
+            </Link>
             {user ? (
               <Link
                 href="/dashboard"
-                className="rounded-[3px] bg-foreground px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shadow-sm flex items-center gap-1.5"
+                className="rounded-[3px] bg-foreground px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shadow-sm flex items-center gap-1.5 shrink-0"
               >
                 {t('nav.dashboard')} →
               </Link>
             ) : (
-              <div className="flex items-center gap-2.5 sm:gap-4">
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                 <Link
                   href="/sign-in"
                   className="text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground hidden sm:block font-bold px-1"
@@ -74,7 +104,7 @@ export function HomeClientView({ user }: { user: { id: string } | null }) {
                 </Link>
                 <Link
                   href="/sign-up"
-                  className="rounded-[3px] bg-foreground px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shadow-sm"
+                  className="rounded-[3px] bg-foreground px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shadow-sm"
                 >
                   {t('nav.signUp')}
                 </Link>
@@ -305,7 +335,12 @@ export function HomeClientView({ user }: { user: { id: string } | null }) {
                     className="rounded-lg border border-border bg-card p-4 space-y-2 hover:border-foreground transition-colors"
                   >
                     <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                      <span className="font-semibold text-foreground uppercase">{s.state}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold text-foreground uppercase">{s.state}</span>
+                        <span className="text-[9px] font-mono text-muted-foreground">
+                          • Verified: Nov 2026
+                        </span>
+                      </div>
                       <IconComponent className="h-3.5 w-3.5 text-muted-foreground" />
                     </div>
                     <p className="font-bold text-foreground text-sm line-clamp-1">{s.name}</p>
@@ -340,7 +375,7 @@ export function HomeClientView({ user }: { user: { id: string } | null }) {
             <span>YOUR BENEFITS. YOUR RIGHTS. YOUR CLAIM.</span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-6 text-[11px] uppercase tracking-wider">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-[11px] uppercase tracking-wider">
             <Link href="/about" className="hover:text-foreground">
               {t('nav.about')}
             </Link>
@@ -350,12 +385,22 @@ export function HomeClientView({ user }: { user: { id: string } | null }) {
             <Link href="/explore" className="hover:text-foreground">
               {t('nav.explore')}
             </Link>
+            <Link href="/future-expansion" className="hover:text-foreground">
+              {t('nav.futureExpansion')}
+            </Link>
             <Link href="/privacy" className="hover:text-foreground">
               Privacy
             </Link>
             <Link href="/terms" className="hover:text-foreground">
               Terms
             </Link>
+            <a
+              href="mailto:rijurajdatta8@gmail.com"
+              className="rounded-[3px] border border-border bg-card px-2.5 py-1 text-[11px] font-bold text-foreground hover:bg-foreground hover:text-background transition-colors inline-flex items-center gap-1"
+            >
+              <Mail className="h-3 w-3" />
+              <span>Contact Us</span>
+            </a>
           </div>
         </div>
       </footer>

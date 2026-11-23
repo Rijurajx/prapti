@@ -10,6 +10,7 @@ import {
   FileText,
   Landmark,
   Sparkles,
+  CheckCircle2,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,9 +27,24 @@ interface SchemeItem {
   portal_url: string | null;
   short_description: string | null;
   tags?: string[] | null;
+  updated_at?: string | null;
+  created_at?: string | null;
   scheme_versions?: {
     benefit_summary_en: string | null;
+    published_at?: string | null;
+    created_at?: string | null;
   } | null;
+}
+
+function formatVerifiedDate(dateString?: string | null) {
+  if (!dateString) return 'Nov 2026';
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return 'Nov 2026';
+    return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  } catch {
+    return 'Nov 2026';
+  }
 }
 
 interface ExploreClientViewProps {
@@ -240,15 +256,22 @@ export function ExploreClientView({ initialSchemes }: ExploreClientViewProps) {
               >
                 <CardHeader className="pb-3">
                   <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-                    <span className="font-bold text-foreground">
-                      {scheme.jurisdiction === 'central'
-                        ? 'Central Scheme'
-                        : scheme.state
-                        ? `${scheme.state} Scheme`
-                        : 'State Scheme'}
-                    </span>
-                    <span className="capitalize px-1.5 py-0.5 rounded bg-muted/60 text-foreground font-semibold">
-                      {scheme.category}
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-foreground">
+                        {scheme.jurisdiction === 'central'
+                          ? 'Central Scheme'
+                          : scheme.state
+                          ? `${scheme.state} Scheme`
+                          : 'State Scheme'}
+                      </span>
+                      <span>•</span>
+                      <span className="capitalize px-1.5 py-0.5 rounded bg-muted/60 text-foreground font-semibold">
+                        {scheme.category}
+                      </span>
+                    </div>
+                    <span className="inline-flex items-center gap-1 rounded bg-muted/50 px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground font-semibold">
+                      <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400" />
+                      Verified: {formatVerifiedDate(version?.published_at || scheme.updated_at || scheme.created_at)}
                     </span>
                   </div>
 

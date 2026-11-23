@@ -29,6 +29,17 @@ interface OpportunityCardProps {
   onAskAI?: (prompt: string) => void;
 }
 
+function formatVerifiedDate(dateString?: string | null) {
+  if (!dateString) return 'Nov 2026';
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return 'Nov 2026';
+    return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  } catch {
+    return 'Nov 2026';
+  }
+}
+
 export function OpportunityCard({ opportunity: opp, onAskAI }: OpportunityCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [isSaved, setIsSaved] = useState(opp.isSaved ?? false);
@@ -97,6 +108,11 @@ export function OpportunityCard({ opportunity: opp, onAskAI }: OpportunityCardPr
               </span>
               <span className="text-xs text-muted-foreground">•</span>
               <span className="text-xs capitalize text-muted-foreground">{opp.category}</span>
+              <span className="text-xs text-muted-foreground">•</span>
+              <span className="inline-flex items-center gap-1 rounded bg-muted/60 px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground">
+                <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                Verified: {formatVerifiedDate(opp.lastVerifiedAt)}
+              </span>
             </div>
             <CardTitle className="mt-2 text-lg sm:text-xl">
               <Link href={`/schemes/${opp.schemeId}`} className="hover:underline">

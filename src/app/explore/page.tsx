@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageSwitcher } from '@/components/language-switcher';
+import { Github, Mail } from 'lucide-react';
 import { ExploreClientView } from './explore-client-view';
 
 export const revalidate = 60;
@@ -35,8 +36,12 @@ export default async function PublicExplorePage() {
         portal_url,
         short_description,
         tags,
+        updated_at,
+        created_at,
         scheme_versions!schemes_current_version_fk (
-          benefit_summary_en
+          benefit_summary_en,
+          published_at,
+          created_at
         )
       `)
       .eq('status', 'published')
@@ -67,9 +72,40 @@ export default async function PublicExplorePage() {
             </span>
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
+          <nav className="hidden md:flex items-center gap-6 text-xs text-muted-foreground uppercase tracking-wider">
+            <Link href="/how-it-works" className="hover:text-foreground transition-colors">
+              How it works
+            </Link>
+            <Link href="/explore" className="text-foreground font-bold border-b border-foreground">
+              Schemes
+            </Link>
+            <Link href="/about" className="hover:text-foreground transition-colors">
+              About
+            </Link>
+            <Link href="/future-expansion" className="hover:text-foreground transition-colors">
+              Future Expansion
+            </Link>
+            <a
+              href="https://github.com/Rijurajx/prapti"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              title="GitHub Repository"
+              aria-label="GitHub Repository"
+            >
+              <Github className="h-4 w-4" />
+            </a>
+          </nav>
+
+          <div className="flex items-center gap-2.5 sm:gap-4 md:gap-5">
             <LanguageSwitcher />
             <ThemeToggle />
+            <Link
+              href="/demo"
+              className="rounded-full border border-foreground/40 bg-muted/40 hover:bg-foreground hover:text-background px-3 py-1 text-[11px] font-mono font-bold uppercase tracking-wider transition-all shadow-sm shrink-0"
+            >
+              View Demo
+            </Link>
             {user ? (
               <Link
                 href="/dashboard"
@@ -111,8 +147,42 @@ export default async function PublicExplorePage() {
         <ExploreClientView initialSchemes={list} />
       </main>
 
-      <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground bg-card/40">
-        PRAPTI // Transparent Citizen Welfare Discovery &amp; Deterministic Rules Engine
+      <footer className="border-t border-border py-8 text-xs text-muted-foreground bg-card/60">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-xs font-bold text-foreground">PRAPTI</span>
+            <span>{'//'}</span>
+            <span>TRANSPARENT CITIZEN WELFARE DISCOVERY</span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-[11px] uppercase tracking-wider">
+            <Link href="/about" className="hover:text-foreground">
+              About
+            </Link>
+            <Link href="/how-it-works" className="hover:text-foreground">
+              How It Works
+            </Link>
+            <Link href="/explore" className="text-foreground font-bold">
+              Schemes
+            </Link>
+            <Link href="/future-expansion" className="hover:text-foreground">
+              Future Expansion
+            </Link>
+            <Link href="/privacy" className="hover:text-foreground">
+              Privacy
+            </Link>
+            <Link href="/terms" className="hover:text-foreground">
+              Terms
+            </Link>
+            <a
+              href="mailto:rijurajdatta8@gmail.com"
+              className="rounded-[3px] border border-border bg-card px-2.5 py-1 text-[11px] font-bold text-foreground hover:bg-foreground hover:text-background transition-colors inline-flex items-center gap-1"
+            >
+              <Mail className="h-3 w-3" />
+              <span>Contact Us</span>
+            </a>
+          </div>
+        </div>
       </footer>
     </div>
   );
