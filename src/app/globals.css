@@ -8,6 +8,8 @@
   --foreground: 0 0% 7%;          /* #121212 deep ink black */
   --card: 45 10% 98.5%;          /* #FAF9F6 crisp card background */
   --card-foreground: 0 0% 7%;
+  --popover: 45 10% 98.5%;       /* solid popover background */
+  --popover-foreground: 0 0% 7%;
   --primary: 0 0% 4%;            /* #0A0A0A solid black button / active */
   --primary-foreground: 0 0% 100%; /* #FFFFFF */
   --muted: 45 10% 92%;           /* #ECEAE4 subtle muted fill */
@@ -29,6 +31,8 @@
   --foreground: 45 15% 97%;       /* #F7F6F3 crisp white text */
   --card: 0 0% 10%;              /* #1A1A1A card background */
   --card-foreground: 45 15% 97%;
+  --popover: 0 0% 10%;           /* solid dark popover background */
+  --popover-foreground: 45 15% 97%;
   --primary: 0 0% 98%;           /* #FAFAFA inverted primary */
   --primary-foreground: 0 0% 7%;
   --muted: 0 0% 14%;             /* #242424 subtle muted fill */

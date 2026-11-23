@@ -673,7 +673,7 @@ export function DashboardWorkspace({
                         className="w-full flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-foreground hover:bg-muted rounded-sm transition-colors"
                       >
                         <Plus className="h-3.5 w-3.5" />
-                        <span>+ Add Family Member</span>
+                        <span>Add Family Member</span>
                       </button>
                     </div>
                   </div>

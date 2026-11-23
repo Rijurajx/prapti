@@ -159,6 +159,7 @@ export function AssistantChat({
   const [memberDropdownOpen, setMemberDropdownOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const currentCitizenIdRef = useRef<string>(activeCitizen.id);
+  const processedPromptRef = useRef<string | null>(null);
 
   // Auto-save to localStorage whenever messages change
   useEffect(() => {
@@ -244,11 +245,20 @@ export function AssistantChat({
 
   // Auto-send initial prompt if passed from dashboard tabs (e.g. My Opportunities)
   useEffect(() => {
-    if (initialPrompt && initialPrompt.trim()) {
-      const prompt = initialPrompt.trim();
-      onClearInitialPrompt?.();
-      handleSend(prompt);
+    if (!initialPrompt || !initialPrompt.trim()) {
+      processedPromptRef.current = null;
+      return;
     }
+
+    const prompt = initialPrompt.trim();
+    // Guard against duplicate execution (React StrictMode or fast re-renders)
+    if (processedPromptRef.current === prompt) {
+      return;
+    }
+
+    processedPromptRef.current = prompt;
+    onClearInitialPrompt?.();
+    handleSend(prompt);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialPrompt]);
 

@@ -43,16 +43,16 @@ export function LanguageSwitcher({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="rounded-[3px] border border-border bg-card px-2 py-1 sm:px-2.5 sm:py-1 text-xs font-semibold uppercase tracking-wider text-foreground hover:bg-muted/80 transition-colors flex items-center gap-1 shadow-sm cursor-pointer"
+        className="rounded-[3px] border border-border bg-card dark:bg-[#1A1A1A] px-2 py-1 sm:px-2.5 sm:py-1 text-xs font-semibold uppercase tracking-wider text-foreground hover:bg-muted transition-colors flex items-center gap-1 shadow-sm cursor-pointer shrink-0"
         aria-label="Select website language"
         title="Switch language (English / বাংলা / हिन्दी / मराठी)"
       >
-        <Globe className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        <Globe className="h-3.5 w-3.5 shrink-0 text-foreground" />
         <span className="flex items-center gap-1">
           {!compact && (
             <span className="text-muted-foreground font-mono text-[10px] hidden sm:inline">LANG:</span>
           )}
-          <span className="font-bold text-[11px] sm:text-xs">{activeLocaleInfo?.badge}</span>
+          <span className="font-bold text-[11px] sm:text-xs text-foreground">{activeLocaleInfo?.badge}</span>
         </span>
         <ChevronDown
           className={`h-3 w-3 shrink-0 text-muted-foreground transition-transform duration-150 ${
@@ -62,7 +62,7 @@ export function LanguageSwitcher({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-1.5 w-44 rounded-md border border-border bg-popover p-1 shadow-2xl z-[9999] text-xs">
+        <div className="absolute right-0 mt-1.5 w-44 rounded-md border-2 border-border bg-card dark:bg-[#1A1A1A] p-1 shadow-2xl z-[9999] text-xs">
           <div className="px-2 py-1 text-[10px] uppercase font-bold tracking-wider text-muted-foreground border-b border-border mb-1">
             Language / ভাষা / भाषा
           </div>

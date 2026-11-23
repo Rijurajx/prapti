@@ -242,7 +242,9 @@ export function OpportunityCard({ opportunity: opp, onAskAI }: OpportunityCardPr
                   {onAskAI && (
                     <button
                       type="button"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
                         const missingDocs = docReadiness.missingMandatoryDocuments
                           .map((item) => item.requirement.documentName)
                           .join(', ');
@@ -361,7 +363,9 @@ export function OpportunityCard({ opportunity: opp, onAskAI }: OpportunityCardPr
                 type="button"
                 variant="secondary"
                 size="sm"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
                   if (opp.assessment.outcome === 'likely_eligible' && !docReadiness.isFullyReady) {
                     const missingDocs = docReadiness.missingMandatoryDocuments
                       .map((item) => item.requirement.documentName)
