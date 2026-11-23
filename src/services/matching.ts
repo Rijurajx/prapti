@@ -59,6 +59,7 @@ export async function loadCitizenFacts(
     empRes,
     eduRes,
     agriRes,
+    assetRes,
     docRes,
   ] = await Promise.all([
     supabase.from('citizen_profiles').select('id, full_name, is_minor, category_tags').eq('id', citizenId).maybeSingle(),
@@ -68,6 +69,7 @@ export async function loadCitizenFacts(
     supabase.from('citizen_employment_profiles').select('*').eq('citizen_id', citizenId).maybeSingle(),
     supabase.from('education_records').select('*').eq('citizen_id', citizenId),
     supabase.from('citizen_agricultural_profiles').select('*').eq('citizen_id', citizenId).maybeSingle(),
+    supabase.from('citizen_asset_profiles').select('*').eq('citizen_id', citizenId).maybeSingle(),
     supabase
       .from('citizen_document_inventory')
       .select('status, document_code')
@@ -87,6 +89,7 @@ export async function loadCitizenFacts(
     employment: empRes.data,
     education: eduRes.data,
     agriculture: agriRes.data,
+    assets: assetRes.data,
     documents: rawDocs,
   };
 

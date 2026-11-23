@@ -25,6 +25,25 @@ export interface CitizenRAGKnowledgeBase {
     class12Percentage: number | null;
     operatesLand: boolean | null;
   };
+  assets?: {
+    twoWheeler: boolean;
+    twoWheelerCount?: number | null;
+    fourWheeler: boolean;
+    fourWheelerCount?: number | null;
+    ownsHouse: boolean;
+    houseCount?: number | null;
+    houseType?: string | null;
+    ownsLand: boolean;
+    landAreaAcres?: number | null;
+    landType?: string | null;
+    agriculturalEquipment: boolean;
+    agriculturalEquipmentDetails?: string | null;
+    hasRefrigerator: boolean;
+    hasAirConditioner: boolean;
+    ownsCommercialProperty: boolean;
+    hasKisanCreditCard: boolean;
+    kccCreditLimitInr?: number | null;
+  };
   documents: {
     ready: string[];
     missing: string[];
@@ -255,6 +274,25 @@ export async function buildCitizenRAGKnowledgeBase(
         class12Percentage: (facts.class_12_percentage as number) ?? null,
         operatesLand: (facts.operates_land as boolean) ?? null,
       },
+      assets: {
+        twoWheeler: Boolean(facts.owns_two_wheeler),
+        twoWheelerCount: (facts.two_wheeler_count as number) ?? null,
+        fourWheeler: Boolean(facts.owns_four_wheeler),
+        fourWheelerCount: (facts.four_wheeler_count as number) ?? null,
+        ownsHouse: Boolean(facts.owns_house),
+        houseCount: (facts.house_count as number) ?? null,
+        houseType: (facts.house_type as string) ?? null,
+        ownsLand: Boolean(facts.owns_land),
+        landAreaAcres: (facts.asset_land_area_acres as number) ?? null,
+        landType: (facts.asset_land_type as string) ?? null,
+        agriculturalEquipment: Boolean(facts.owns_agricultural_equipment),
+        agriculturalEquipmentDetails: (facts.agricultural_equipment_details as string) ?? null,
+        hasRefrigerator: Boolean(facts.has_refrigerator),
+        hasAirConditioner: Boolean(facts.has_air_conditioner),
+        ownsCommercialProperty: Boolean(facts.owns_commercial_property),
+        hasKisanCreditCard: Boolean(facts.has_kisan_credit_card),
+        kccCreditLimitInr: (facts.kcc_credit_limit_inr as number) ?? null,
+      },
       documents: {
         ready: readyDocs,
         missing: missingDocs,
@@ -327,6 +365,17 @@ export function formatRAGKnowledgeBaseForPrompt(kb: CitizenRAGKnowledgeBase): st
 - Employment Status: ${c.employmentStatus ?? 'Not specified'}
 - Education: ${c.highestEducation ?? 'Not specified'}${c.class12Percentage ? ` (Class 12: ${c.class12Percentage}%)` : ''}${c.class10Percentage ? ` (Class 10: ${c.class10Percentage}%)` : ''}
 - Operates Agricultural Land: ${c.operatesLand ? 'Yes' : 'No / Not marked'}
+
+=== OWNED ASSETS & SECC WELFARE INDICATORS ===
+- Motorized 2-Wheeler: ${kb.assets?.twoWheeler ? `Yes (${kb.assets.twoWheelerCount ?? 1} owned)` : 'No'}
+- Motorized 4-Wheeler: ${kb.assets?.fourWheeler ? `Yes (${kb.assets.fourWheelerCount ?? 1} owned - BPL/NFSA/Antyodaya exclusion criterion)` : 'No'}
+- Residential House: ${kb.assets?.ownsHouse ? `Yes (${kb.assets.houseCount ?? 1} owned, Construction Type: ${kb.assets.houseType ?? 'Unspecified'})` : (kb.assets?.houseType === 'homeless' ? 'Homeless / Houseless' : 'No house owned')}
+- Land Ownership: ${kb.assets?.ownsLand ? `Yes (${kb.assets.landAreaAcres ? `${kb.assets.landAreaAcres} acres` : 'Area not specified'}, Type: ${kb.assets.landType ?? 'Unspecified'})` : 'No'}
+- Mechanized Agricultural Equipment: ${kb.assets?.agriculturalEquipment ? `Yes (${kb.assets.agriculturalEquipmentDetails ?? 'Tractor/harvester'})` : 'No'}
+- Refrigerator: ${kb.assets?.hasRefrigerator ? 'Yes (SECC BPL exclusion)' : 'No'}
+- Air Conditioner (AC): ${kb.assets?.hasAirConditioner ? 'Yes (SECC exclusion)' : 'No'}
+- Commercial Property / Shop: ${kb.assets?.ownsCommercialProperty ? 'Yes' : 'No'}
+- Kisan Credit Card (KCC): ${kb.assets?.hasKisanCreditCard ? `Yes (${kb.assets.kccCreditLimitInr ? `Limit ₹${kb.assets.kccCreditLimitInr.toLocaleString('en-IN')}` : 'Active card'})` : 'No'}
 
 === DOCUMENT POSSESSION INVENTORY ===
 - Ready / Available: ${readyDocsStr}

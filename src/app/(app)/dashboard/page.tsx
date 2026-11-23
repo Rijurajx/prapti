@@ -11,6 +11,7 @@ import {
   getDocumentStatuses,
 } from '@/app/profile/records-actions';
 import { getAgriculturalProfile } from '@/app/profile/agriculture-actions';
+import { getAssetProfile } from '@/app/profile/asset-actions';
 import { getMyHouseholds } from '@/app/household/queries';
 import { DashboardWorkspace } from './dashboard-workspace';
 import { DOCUMENT_STATUS_VALUES } from '@/lib/validation/finance-education-documents';
@@ -114,6 +115,7 @@ export default async function DashboardPage({
     employmentProfile,
     educationRecords,
     agriculturalProfile,
+    assetProfile,
     docTypes,
     docStatuses,
     households,
@@ -171,6 +173,7 @@ export default async function DashboardPage({
     getEmploymentProfile(),
     listEducationRecords(),
     getAgriculturalProfile(),
+    getAssetProfile(citizenId),
     getDocumentTypes(),
     getDocumentStatuses(),
     getMyHouseholds(),
@@ -219,6 +222,7 @@ export default async function DashboardPage({
       personalDetails={personalDetails}
       addresses={addresses}
       financialProfile={financialProfile}
+      assetProfile={assetProfile}
       employmentProfile={employmentProfile}
       educationRecords={educationRecords ?? []}
       agriculturalProfile={agriculturalProfile}

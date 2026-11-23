@@ -47,6 +47,7 @@ import { ExportDataButton } from '@/app/privacy/export-data-button';
 import { PersonalDetailsForm } from '@/app/profile/personal/personal-form';
 import { AddressForm } from '@/app/profile/address/address-form';
 import { FinanceForm } from '@/app/profile/finance/finance-form';
+import { AssetForm } from '@/app/profile/finance/asset-form';
 import { EmploymentForm } from '@/app/profile/employment/employment-form';
 import { EducationManager } from '@/app/profile/education/education-manager';
 import { AgricultureForm } from '@/app/profile/agriculture/agriculture-form';
@@ -90,6 +91,7 @@ interface DashboardWorkspaceProps {
   personalDetails: any;
   addresses: any;
   financialProfile: any;
+  assetProfile?: any;
   employmentProfile: any;
   educationRecords: any[];
   agriculturalProfile: any;
@@ -111,6 +113,7 @@ export function DashboardWorkspace({
   personalDetails,
   addresses,
   financialProfile,
+  assetProfile,
   employmentProfile,
   educationRecords,
   agriculturalProfile,
@@ -800,6 +803,17 @@ export function DashboardWorkspace({
                       { label: 'Personal & Age Details', done: Boolean(personalDetails?.dateOfBirth), tab: 'profile_personal' },
                       { label: 'Residential Domicile', done: Boolean(addresses?.current?.state), tab: 'profile_personal' },
                       { label: 'Family Annual Income', done: Boolean(financialProfile?.family_annual_income_inr), tab: 'profile_finance' },
+                      {
+                        label: 'Owned Assets & Property',
+                        done: Boolean(
+                          assetProfile?.ownsHouse ||
+                          assetProfile?.ownsTwoWheeler ||
+                          assetProfile?.ownsFourWheeler ||
+                          assetProfile?.ownsLand ||
+                          assetProfile?.houseType
+                        ),
+                        tab: 'profile_finance',
+                      },
                       { label: 'Education Records', done: educationRecords.length > 0, tab: 'profile_education' },
                       { label: 'Document Inventory', done: readyDocsCount > 0, tab: 'profile_documents' },
                     ].map((step) => (
@@ -1312,20 +1326,42 @@ export function DashboardWorkspace({
               </div>
               <EducationManager records={educationRecords} />
             </div>
-          ) : activeTab === 'profile_finance' ? (
+          ) : activeTab === 'profile_finance' || activeTab === 'profile_assets' ? (
             /* =========================================================================
-               TAB: PROFILE FINANCE & EMPLOYMENT
+               TAB: PROFILE FINANCE, ASSETS & EMPLOYMENT
             ========================================================================= */
             <div className="space-y-6 max-w-3xl">
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                  Finance & Employment
+                  Finance, Assets & Employment
                 </h1>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Record your annual family income and employment category.
+                  Active Beneficiary: <strong className="text-foreground">{activeCitizen.name}</strong> ({activeCitizen.relationship}).
+                  Record annual income, owned property (2-wheeler, 4-wheeler, houses, land), and SECC welfare criteria.
                 </p>
               </div>
               <FinanceForm initial={financialProfile} />
+              <div className="pt-6 border-t border-border">
+                <AssetForm initial={assetProfile ?? {
+                  ownsTwoWheeler: false,
+                  twoWheelerCount: null,
+                  ownsFourWheeler: false,
+                  fourWheelerCount: null,
+                  ownsHouse: false,
+                  houseCount: null,
+                  houseType: null,
+                  ownsLand: false,
+                  landAreaAcres: null,
+                  landType: null,
+                  ownsAgriculturalEquipment: false,
+                  agriculturalEquipmentDetails: null,
+                  hasRefrigerator: false,
+                  hasAirConditioner: false,
+                  ownsCommercialProperty: false,
+                  hasKisanCreditCard: false,
+                  kccCreditLimitInr: null,
+                }} />
+              </div>
               <div className="pt-6 border-t border-border">
                 <EmploymentForm initial={employmentProfile} />
               </div>

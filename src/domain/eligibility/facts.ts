@@ -50,6 +50,25 @@ export interface RawCitizenData {
     irrigation?: string | null;
     cultivation_pattern?: string | null;
   } | null;
+  assets?: {
+    owns_two_wheeler?: boolean | null;
+    two_wheeler_count?: number | null;
+    owns_four_wheeler?: boolean | null;
+    four_wheeler_count?: number | null;
+    owns_house?: boolean | null;
+    house_count?: number | null;
+    house_type?: string | null;
+    owns_land?: boolean | null;
+    land_area_acres?: number | null;
+    land_type?: string | null;
+    owns_agricultural_equipment?: boolean | null;
+    agricultural_equipment_details?: string | null;
+    has_refrigerator?: boolean | null;
+    has_air_conditioner?: boolean | null;
+    owns_commercial_property?: boolean | null;
+    has_kisan_credit_card?: boolean | null;
+    kcc_credit_limit_inr?: number | null;
+  } | null;
   documents?: Array<{
     document_code?: string;
     status: DocumentStatus;
@@ -299,7 +318,31 @@ export function compileCitizenFacts(data: RawCitizenData): FactDictionary {
     facts.cultivation_pattern = (data.agriculture.cultivation_pattern as any) ?? null;
   }
 
-  // 7. Documents inventory map
+  // 7. Assets & SECC Socio-Economic Indicators
+  if (data.assets) {
+    const a = data.assets;
+    facts.owns_two_wheeler = Boolean(a.owns_two_wheeler);
+    facts.two_wheeler_count = a.two_wheeler_count ?? (a.owns_two_wheeler ? 1 : 0);
+    facts.owns_four_wheeler = Boolean(a.owns_four_wheeler);
+    facts.four_wheeler_count = a.four_wheeler_count ?? (a.owns_four_wheeler ? 1 : 0);
+    facts.owns_house = Boolean(a.owns_house);
+    facts.house_count = a.house_count ?? (a.owns_house ? 1 : 0);
+    facts.house_type = a.house_type ?? null;
+    facts.has_pucca_house = a.house_type === 'pucca';
+    facts.is_homeless = a.house_type === 'homeless' || (!a.owns_house && a.house_type === null);
+    facts.owns_land = Boolean(a.owns_land);
+    facts.asset_land_area_acres = a.land_area_acres ?? null;
+    facts.asset_land_type = a.land_type ?? null;
+    facts.owns_agricultural_equipment = Boolean(a.owns_agricultural_equipment);
+    facts.agricultural_equipment_details = a.agricultural_equipment_details ?? null;
+    facts.has_refrigerator = Boolean(a.has_refrigerator);
+    facts.has_air_conditioner = Boolean(a.has_air_conditioner);
+    facts.owns_commercial_property = Boolean(a.owns_commercial_property);
+    facts.has_kisan_credit_card = Boolean(a.has_kisan_credit_card);
+    facts.kcc_credit_limit_inr = a.kcc_credit_limit_inr ?? null;
+  }
+
+  // 8. Documents inventory map
   if (data.documents && data.documents.length > 0) {
     const docMap: Record<string, DocumentStatus> = {};
     for (const d of data.documents) {
