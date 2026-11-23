@@ -67,31 +67,31 @@ export default async function PublicExplorePage() {
             </span>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
             <LanguageSwitcher />
             <ThemeToggle />
             {user ? (
               <Link
                 href="/dashboard"
-                className="bg-foreground text-background px-3 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-foreground/90 transition-colors rounded-[3px]"
+                className="bg-foreground text-background px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-foreground/90 transition-colors rounded-[3px]"
               >
                 Dashboard →
               </Link>
             ) : (
-              <>
+              <div className="flex items-center gap-2.5 sm:gap-4">
                 <Link
                   href="/sign-in"
-                  className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground hidden sm:block"
+                  className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground hidden sm:block px-1"
                 >
                   Sign In
                 </Link>
                 <Link
                   href="/sign-up"
-                  className="bg-foreground text-background px-3 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-foreground/90 transition-colors rounded-[3px]"
+                  className="bg-foreground text-background px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-foreground/90 transition-colors rounded-[3px]"
                 >
                   Get Matched →
                 </Link>
-              </>
+              </div>
             )}
           </div>
         </div>

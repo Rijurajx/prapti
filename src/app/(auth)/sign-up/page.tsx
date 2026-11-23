@@ -9,12 +9,14 @@ import { signUpSchema, type SignUpInput } from '@/lib/validation/auth';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { t } from '@/lib/i18n/messages';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import { triggerPageLoading } from '@/components/route-progress-bar';
 
 export default function SignUpPage() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
   const {
     register,
     handleSubmit,
@@ -43,7 +45,10 @@ export default function SignUpPage() {
         return;
       }
       if (data.session) {
+        triggerPageLoading();
+        setIsNavigating(true);
         router.push('/dashboard');
+        router.refresh();
         return;
       }
       if (!data.session) {
@@ -219,10 +224,22 @@ export default function SignUpPage() {
 
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-foreground text-background py-2.5 px-4 text-xs font-bold uppercase tracking-wider hover:bg-foreground/90 disabled:opacity-50 transition-colors cursor-pointer"
+              disabled={isSubmitting || isNavigating}
+              className="w-full bg-foreground text-background py-2.5 px-4 text-xs font-bold uppercase tracking-wider hover:bg-foreground/90 disabled:opacity-60 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
             >
-              {isSubmitting ? 'Creating Profile...' : t('en', 'signUp')}
+              {isNavigating ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>Entering Workspace...</span>
+                </>
+              ) : isSubmitting ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>Creating Profile...</span>
+                </>
+              ) : (
+                <span>{t('en', 'signUp')} →</span>
+              )}
             </button>
           </form>
         )}

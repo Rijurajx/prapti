@@ -34,7 +34,9 @@ import {
   Trash2,
   Check,
   Plus,
+  Loader2,
 } from 'lucide-react';
+import { triggerPageLoading } from '@/components/route-progress-bar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -126,6 +128,7 @@ export function DashboardWorkspace({
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [switchingProfileId, setSwitchingProfileId] = useState<string | null>(null);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [schemeSearchQuery, setSchemeSearchQuery] = useState('');
   const [schemeTagFilter, setSchemeTagFilter] = useState<string>('all');
   const [schemeStateFilter, setSchemeStateFilter] = useState<string>('all');
@@ -166,6 +169,7 @@ export function DashboardWorkspace({
       return;
     }
     setSwitchingProfileId(memberId);
+    triggerPageLoading();
     const res = await switchActiveProfile(memberId);
     if (res.ok) {
       window.location.reload();
@@ -515,7 +519,7 @@ export function DashboardWorkspace({
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2.5 text-xs shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3.5 md:gap-4.5 text-xs shrink-0">
             {/* Live Eligibility Badge (desktop only to prevent mobile cramping) */}
             {eligibleCount > 0 && (
               <button
@@ -617,15 +621,31 @@ export function DashboardWorkspace({
             <LanguageSwitcher />
             <ThemeToggle />
 
-            <form action={signOut}>
+            <form
+              action={signOut}
+              onSubmit={() => {
+                setIsSigningOut(true);
+                triggerPageLoading();
+              }}
+            >
               <Button
                 type="submit"
                 variant="ghost"
                 size="sm"
-                className="h-8 text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-950/40"
+                disabled={isSigningOut}
+                className="h-8 text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-950/40 cursor-pointer transition-all"
               >
-                <LogOut className="h-3.5 w-3.5 sm:mr-1 text-rose-600 dark:text-rose-400" />
-                <span className="hidden sm:inline">{t('nav.signOut')}</span>
+                {isSigningOut ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1 text-rose-600 dark:text-rose-400" />
+                    <span className="hidden sm:inline">Signing Out...</span>
+                  </>
+                ) : (
+                  <>
+                    <LogOut className="h-3.5 w-3.5 sm:mr-1 text-rose-600 dark:text-rose-400" />
+                    <span className="hidden sm:inline">{t('nav.signOut')}</span>
+                  </>
+                )}
               </Button>
             </form>
           </div>

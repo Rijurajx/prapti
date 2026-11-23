@@ -2,7 +2,9 @@ import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { Inter, Noto_Sans_Bengali, Space_Mono, Silkscreen } from 'next/font/google';
 import './globals.css';
+import { Suspense } from 'react';
 import { I18nProvider } from '@/lib/i18n/context';
+import { RouteProgressBar } from '@/components/route-progress-bar';
 import { resolveServerLocale, LOCALE_COOKIE_NAME } from '@/lib/i18n';
 
 const inter = Inter({
@@ -76,6 +78,9 @@ export default async function RootLayout({
       <body
         className={`${inter.variable} ${spaceMono.variable} ${silkscreen.variable} ${notoBengali.variable} bg-background text-foreground antialiased font-mono selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black`}
       >
+        <Suspense fallback={null}>
+          <RouteProgressBar />
+        </Suspense>
         <I18nProvider initialLocale={initialLocale}>
           {children}
         </I18nProvider>

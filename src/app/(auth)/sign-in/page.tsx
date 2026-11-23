@@ -9,10 +9,13 @@ import { signInSchema, type SignInInput } from '@/lib/validation/auth';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { t } from '@/lib/i18n/messages';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Loader2 } from 'lucide-react';
+import { triggerPageLoading } from '@/components/route-progress-bar';
 
 export default function SignInPage() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
   const {
     register,
     handleSubmit,
@@ -34,7 +37,10 @@ export default function SignInPage() {
       setServerError(error.message);
       return;
     }
+    triggerPageLoading();
+    setIsNavigating(true);
     router.push('/dashboard');
+    router.refresh();
   };
 
   return (
@@ -132,10 +138,22 @@ export default function SignInPage() {
 
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-foreground text-background py-2.5 px-4 text-xs font-bold uppercase tracking-wider hover:bg-foreground/90 disabled:opacity-50 transition-colors"
+            disabled={isSubmitting || isNavigating}
+            className="w-full bg-foreground text-background py-2.5 px-4 text-xs font-bold uppercase tracking-wider hover:bg-foreground/90 disabled:opacity-60 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
           >
-            {isSubmitting ? 'Authenticating...' : t('en', 'signIn')}
+            {isNavigating ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <span>Entering Workspace...</span>
+              </>
+            ) : isSubmitting ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <span>Authenticating...</span>
+              </>
+            ) : (
+              <span>{t('en', 'signIn')} →</span>
+            )}
           </button>
         </form>
 

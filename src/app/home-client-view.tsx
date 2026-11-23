@@ -54,31 +54,31 @@ export function HomeClientView({ user }: { user: { id: string } | null }) {
             </Link>
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
             <LanguageSwitcher />
             <ThemeToggle />
             {user ? (
               <Link
                 href="/dashboard"
-                className="rounded-[3px] bg-foreground px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shadow-sm flex items-center gap-1.5"
+                className="rounded-[3px] bg-foreground px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shadow-sm flex items-center gap-1.5"
               >
                 {t('nav.dashboard')} →
               </Link>
             ) : (
-              <>
+              <div className="flex items-center gap-2.5 sm:gap-4">
                 <Link
                   href="/sign-in"
-                  className="text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground hidden sm:block font-bold"
+                  className="text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground hidden sm:block font-bold px-1"
                 >
                   {t('nav.signIn')}
                 </Link>
                 <Link
                   href="/sign-up"
-                  className="rounded-[3px] bg-foreground px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shadow-sm"
+                  className="rounded-[3px] bg-foreground px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shadow-sm"
                 >
                   {t('nav.signUp')}
                 </Link>
-              </>
+              </div>
             )}
           </div>
         </div>
