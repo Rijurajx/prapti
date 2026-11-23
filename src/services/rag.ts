@@ -674,7 +674,7 @@ export function answerWithDeterministicRAG(
 
   // 6. Default Fallback & Conversational Assistance
   else {
-    reply = `Hello! I am your **PRAPTI AI Benefits Companion**, currently assisting **${c.name}** (${c.relationship.toUpperCase()}).\n\n` +
+    reply = `Hello! I am **Prapti AI**, currently assisting **${c.name}** (${c.relationship.toUpperCase()}).\n\n` +
       `I have complete context on your profile, documents, and verified government schemes:\n` +
       `* **Active Profile:** ${c.name} (Registered in ${c.state ?? 'All-India'})\n` +
       `* **Category Tags:** ${c.categoryTags.length > 0 ? c.categoryTags.join(', ') : 'None marked'}\n` +
@@ -794,8 +794,7 @@ export async function executeRAGQuery(params: {
   // 2. Format knowledge base prompt for Gemini
   const contextPrompt = formatRAGKnowledgeBaseForPrompt(kb);
 
-  const SYSTEM_INSTRUCTIONS = `You are PRAPTI's AI Citizen Benefits Companion.
-PRAPTI is a citizen-first welfare portal for Indian citizens across Central and State schemes (West Bengal, Maharashtra, Rajasthan, Karnataka, Tamil Nadu, Delhi, Uttar Pradesh, Telangana).
+  const SYSTEM_INSTRUCTIONS = `You are Prapti AI, the citizen-first benefits companion for Indian citizens across Central and State schemes (West Bengal, Maharashtra, Rajasthan, Karnataka, Tamil Nadu, Delhi, Uttar Pradesh, Telangana).
 
 CRITICAL DOMAIN RULES:
 1. You have been provided with the verified, deterministic profile, document readiness, and rule evaluation traces of the ACTIVE CITIZEN (${kb.citizen.name}, relationship: ${kb.citizen.relationship}).

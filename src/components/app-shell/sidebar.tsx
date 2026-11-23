@@ -70,7 +70,7 @@ export const appNavSections: readonly AppNavSection[] = [
   {
     label: 'Assistance',
     items: [
-      { href: '/assistant', label: 'AI Assistant', icon: MessageSquare },
+      { href: '/assistant', label: 'Prapti AI', icon: MessageSquare },
       { href: '/guides', label: 'Application Guides', icon: BookOpen },
       { href: '/help', label: 'Help & Support', icon: LifeBuoy },
     ],

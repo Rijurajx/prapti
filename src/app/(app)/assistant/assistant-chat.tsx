@@ -64,7 +64,7 @@ function getWelcomeMessage(activeCitizen: AssistantChatProps['activeCitizen']): 
   return {
     id: 'welcome',
     sender: 'assistant',
-    text: `Hello! I am your **PRAPTI AI Benefits Companion**, loaded with complete context for **${activeCitizen?.name ?? 'Citizen'}** (${(activeCitizen?.relationship ?? 'self').toUpperCase()}).\n\n` +
+    text: `Hello! I am **Prapti AI**, your personal benefits companion with complete context for **${activeCitizen?.name ?? 'Citizen'}** (${(activeCitizen?.relationship ?? 'self').toUpperCase()}).\n\n` +
       `I know what documents you have ready, what criteria you meet, and which schemes you can apply for right now across Central & State governments.\n\n` +
       `Ask me anything — for example:\n` +
       `* *"What schemes am I eligible for?"*\n` +
