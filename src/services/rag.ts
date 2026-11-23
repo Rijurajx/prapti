@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { ServerClient } from './matching';
 import { loadCitizenFacts, loadCitizenDocumentInventory, getPersonalizedOpportunities } from './matching';
 import { extractedFactsSchema, type ExtractedFacts } from './gemini';
+import { callGeminiWithCascade } from './ai-client';
 
 export interface CitizenRAGKnowledgeBase {
   citizen: {
@@ -777,51 +778,39 @@ CRITICAL DOMAIN RULES:
 }`;
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-
     const historyParts = conversationHistory.slice(-4).map((msg) => ({
-      role: msg.sender === 'user' ? 'user' : 'model',
+      role: msg.sender === 'user' ? ('user' as const) : ('model' as const),
       parts: [{ text: msg.text }],
     }));
 
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: `${SYSTEM_INSTRUCTIONS}\n\n${contextPrompt}` }],
-          },
-          {
-            role: 'model',
-            parts: [{ text: JSON.stringify({ reply: `Understood. I have loaded the full profile context and scheme evaluations for ${kb.citizen.name} (${kb.citizen.relationship}). How can I assist?` }) }],
-          },
-          ...historyParts,
-          {
-            role: 'user',
-            parts: [{ text: `User query: "${userMessage}"` }],
-          },
-        ],
-        generationConfig: {
-          responseMimeType: 'application/json',
-          temperature: 0.2,
+    const result = await callGeminiWithCascade({
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: `${SYSTEM_INSTRUCTIONS}\n\n${contextPrompt}` }],
         },
-      }),
+        {
+          role: 'model',
+          parts: [{ text: JSON.stringify({ reply: `Understood. I have loaded the full profile context and scheme evaluations for ${kb.citizen.name} (${kb.citizen.relationship}). How can I assist?` }) }],
+        },
+        ...historyParts,
+        {
+          role: 'user',
+          parts: [{ text: `User query: "${userMessage}"` }],
+        },
+      ],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        temperature: 0.2,
+      },
     });
 
-    if (!res.ok) {
-      console.warn('Gemini RAG API returned status', res.status, 'falling back to deterministic RAG');
+    if (!result?.text) {
+      console.warn('Gemini models unavailable or rate-limited; falling back to deterministic RAG engine');
       return answerWithDeterministicRAG(userMessage, kb);
     }
 
-    const data = await res.json();
-    const candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!candidateText) {
-      return answerWithDeterministicRAG(userMessage, kb);
-    }
-
-    const parsed = JSON.parse(candidateText);
+    const parsed = JSON.parse(result.text);
     const factsParsed = parsed.extractedFacts ? extractedFactsSchema.safeParse({ ...parsed.extractedFacts, assistantReply: parsed.reply }) : null;
 
     const hasNewFacts = factsParsed?.success && Boolean(

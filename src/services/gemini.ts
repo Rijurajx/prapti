@@ -1,6 +1,7 @@
 import 'server-only';
 import { z } from 'zod';
 import type { ServerClient } from './matching';
+import { callGeminiWithCascade } from './ai-client';
 
 export const extractedFactsSchema = z.object({
   age: z.number().int().min(0).max(120).optional().nullable(),
@@ -64,37 +65,24 @@ export async function extractFactsWithGemini(userMessage: string): Promise<Extra
   }
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: `${EXTRACTION_SYSTEM_PROMPT}\n\nUser message: "${userMessage}"` }],
-          },
-        ],
-        generationConfig: {
-          responseMimeType: 'application/json',
-          temperature: 0.1,
+    const result = await callGeminiWithCascade({
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: `${EXTRACTION_SYSTEM_PROMPT}\n\nUser message: "${userMessage}"` }],
         },
-      }),
+      ],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        temperature: 0.1,
+      },
     });
 
-    if (!res.ok) {
-      console.error('Gemini API call failed with status:', res.status);
+    if (!result?.text) {
       return fallbackExtraction(userMessage);
     }
 
-    const data = await res.json();
-    const candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!candidateText) {
-      return fallbackExtraction(userMessage);
-    }
-
-    const parsedJson = JSON.parse(candidateText);
+    const parsedJson = JSON.parse(result.text);
     const validated = extractedFactsSchema.safeParse(parsedJson);
     if (!validated.success) {
       console.warn('Gemini output failed schema validation', validated.error);
