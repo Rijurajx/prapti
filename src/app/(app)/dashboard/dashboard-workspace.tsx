@@ -488,22 +488,23 @@ export function DashboardWorkspace({
 
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Redesigned Header */}
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card/60 backdrop-blur-sm px-4 sm:px-6">
-          <div className="flex items-center gap-3">
+        {/* Redesigned Header with Mobile-Optimized Layout */}
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card/60 backdrop-blur-sm px-2.5 sm:px-6">
+          <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
             <button
               type="button"
-              className="lg:hidden text-foreground hover:text-muted-foreground"
+              className="lg:hidden text-foreground hover:text-muted-foreground p-1 shrink-0"
               onClick={() => setMobileSidebarOpen(true)}
+              aria-label="Open sidebar"
             >
               <Menu className="h-5 w-5" />
             </button>
 
             {/* Monospace telemetry breadcrumb */}
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-muted-foreground min-w-0">
               <span className="hidden sm:inline font-bold text-foreground">PRAPTI</span>
               <span className="hidden sm:inline">{'//'}</span>
-              <span className="font-semibold text-foreground uppercase">
+              <span className="font-semibold text-foreground uppercase truncate max-w-[85px] sm:max-w-none">
                 {selectedSchemeId
                   ? 'SCHEME_INSPECTOR'
                   : activeTab.replace('profile_', 'PROFILE_').replace('_', ' ').toUpperCase()}
@@ -511,29 +512,34 @@ export function DashboardWorkspace({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 text-xs">
-            {/* Live Eligibility Badge */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5 text-xs shrink-0">
+            {/* Live Eligibility Badge (desktop only to prevent mobile cramping) */}
             {eligibleCount > 0 && (
               <button
                 type="button"
                 onClick={() => switchTab('opportunities')}
-                className="hidden sm:inline-flex items-center gap-1.5 rounded border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"
+                className="hidden md:inline-flex items-center gap-1.5 rounded border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"
               >
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                 {eligibleCount} LIKELY ELIGIBLE
               </button>
             )}
 
-            {/* Highlighted Solid Black Family Profile Dropdown */}
+            {/* Highlighted Solid Black Family Profile Dropdown - Mobile Optimized */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                className="bg-foreground text-background font-mono font-bold text-xs uppercase px-3 py-1.5 rounded-[3px] flex items-center gap-1.5 hover:bg-black/90 dark:hover:bg-white/90 dark:hover:text-black transition-colors shadow-sm cursor-pointer border border-foreground"
+                className="bg-foreground text-background font-mono font-bold text-[11px] sm:text-xs uppercase px-2 py-1 sm:px-3 sm:py-1.5 rounded-[3px] flex items-center gap-1 hover:bg-black/90 dark:hover:bg-white/90 dark:hover:text-black transition-colors shadow-sm cursor-pointer border border-foreground"
                 title="Switch Beneficiary Profile"
               >
                 <User className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate max-w-[140px] sm:max-w-[240px]">
+                {/* Mobile version: compact first name */}
+                <span className="inline sm:hidden truncate max-w-[65px] font-bold">
+                  {firstName}
+                </span>
+                {/* Desktop version: full [USER: NAME (RELATION)] */}
+                <span className="hidden sm:inline truncate max-w-[140px] sm:max-w-[240px]">
                   [USER: {activeCitizen.name.toUpperCase()} ({activeCitizen.relationship.toUpperCase()})]
                 </span>
                 <ChevronDown
@@ -546,10 +552,10 @@ export function DashboardWorkspace({
               {userDropdownOpen && (
                 <>
                   <div
-                    className="fixed inset-0 z-40"
+                    className="fixed inset-0 z-[9998]"
                     onClick={() => setUserDropdownOpen(false)}
                   />
-                  <div className="absolute right-0 top-full mt-1.5 z-50 w-72 border-2 border-foreground bg-card p-2 shadow-2xl font-mono text-xs">
+                  <div className="absolute right-0 top-full mt-1.5 z-[9999] w-64 sm:w-72 border-2 border-foreground bg-card p-2 shadow-2xl font-mono text-xs">
                     <div className="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground border-b border-border mb-1">
                       {'//'} {t('dashboard.switchBeneficiary')}
                     </div>
