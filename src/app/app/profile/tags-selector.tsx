@@ -30,7 +30,7 @@ const PRESET_GROUPS = [
   },
   {
     group: 'Occupation & Livelihood',
-    tags: ['Farmer', 'Artisan', 'BPL / Low Income', 'Unemployed', 'Self Employed'],
+    tags: ['Farmer', 'Artisan', 'BPL / Low Income', 'Employed', 'Unemployed', 'Self Employed'],
   },
   {
     group: 'Special Status',

@@ -13,6 +13,7 @@ import {
   ArrowRight,
   FileText,
   Clock,
+  AlertCircle,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -75,7 +76,11 @@ export function OpportunityCard({ opportunity: opp }: OpportunityCardProps) {
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone={outcomeTone}>{outcomeLabel}</Badge>
               <span className="text-xs uppercase tracking-wider text-muted-foreground">
-                {opp.jurisdiction === 'central' ? 'Central Scheme' : 'West Bengal'}
+                {opp.jurisdiction === 'central'
+                  ? 'Central Scheme'
+                  : opp.state
+                  ? `${opp.state} Scheme`
+                  : 'State Scheme'}
               </span>
               <span className="text-xs text-muted-foreground">•</span>
               <span className="text-xs capitalize text-muted-foreground">{opp.category}</span>
@@ -149,6 +154,39 @@ export function OpportunityCard({ opportunity: opp }: OpportunityCardProps) {
             </Badge>
           )}
         </div>
+
+        {/* Action Prompt for Eligible Citizens Missing Documents */}
+        {opp.assessment.outcome === 'likely_eligible' && !docReadiness.isFullyReady && (
+          <div className="rounded-md border border-amber-300 bg-amber-50/80 p-3 text-xs text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+            <div className="flex items-start gap-2.5">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+              <div className="space-y-1">
+                <p className="font-bold uppercase tracking-tight">
+                  You satisfy all eligibility criteria!
+                </p>
+                <p className="text-muted-foreground">
+                  To complete your application, you only need to obtain or verify the following required document(s):
+                </p>
+                <ul className="list-disc list-inside mt-1 space-y-0.5 font-medium">
+                  {docReadiness.missingMandatoryDocuments.map((item) => (
+                    <li key={item.requirement.documentCode}>
+                      {item.requirement.documentName}
+                      {item.requirement.notesEn ? ` (${item.requirement.notesEn})` : ''}
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-2 pt-1">
+                  <Link
+                    href="/app/profile/documents"
+                    className="inline-flex items-center gap-1 font-bold underline hover:text-amber-900"
+                  >
+                    Add to your Document Inventory in Profile <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Missing fields notification */}
         {opp.assessment.missingFields.length > 0 && (

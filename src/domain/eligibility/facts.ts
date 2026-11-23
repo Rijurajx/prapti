@@ -169,6 +169,22 @@ export function compileCitizenFacts(data: RawCitizenData): FactDictionary {
   if (lowerTags.includes('bpl') || lowerTags.some((t) => t.includes('low income'))) {
     facts.is_bpl = true;
   }
+  if (lowerTags.includes('employed')) {
+    facts.is_employed = true;
+    facts.employment_status = 'employed';
+  }
+  if (lowerTags.includes('unemployed')) {
+    facts.is_unemployed = true;
+    facts.employment_status = 'unemployed';
+  }
+  if (lowerTags.includes('self employed') || lowerTags.includes('self-employed')) {
+    facts.is_employed = true;
+    facts.employment_status = 'self_employed';
+  }
+  if (lowerTags.includes('disabled') || lowerTags.includes('pwd')) {
+    facts.is_disabled = true;
+    facts.has_disability = true;
+  }
   if (lowerTags.includes('girl') || lowerTags.includes('women')) {
     facts.gender = 'female';
   }

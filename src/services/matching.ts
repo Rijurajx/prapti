@@ -24,6 +24,7 @@ export interface MatchedSchemeOpportunity {
   ministryLabel: string | null;
   category: string;
   jurisdiction: string;
+  state?: string | null;
   portalUrl: string | null;
   shortDescription: string | null;
   benefitSummary: string | null;
@@ -140,6 +141,7 @@ export async function getPersonalizedOpportunities(
         ministry_label,
         category,
         jurisdiction,
+        state,
         portal_url,
         short_description,
         tags,
@@ -221,6 +223,22 @@ export async function getPersonalizedOpportunities(
     // Evaluate document readiness
     const readiness = evaluateDocumentReadiness(docRequirements, inventory);
 
+    // State jurisdiction enforcement:
+    // Central schemes are applicable regardless of state.
+    // State schemes are applicable ONLY if citizen resides in that specific state.
+    const isStateScheme = (scheme.jurisdiction ?? 'state') === 'state';
+    const isStateMismatch =
+      isStateScheme &&
+      Boolean(scheme.state) &&
+      Boolean(facts.state) &&
+      (facts.state as string).trim().toLowerCase() !== (scheme.state as string).trim().toLowerCase();
+
+    // If citizen state is known and doesn't match the state scheme, mark as ineligible
+    let effectiveOutcome = assessment.outcome;
+    if (isStateMismatch) {
+      effectiveOutcome = 'likely_ineligible';
+    }
+
     const opp: MatchedSchemeOpportunity = {
       schemeId: scheme.id,
       schemeSlug: scheme.slug,
@@ -229,23 +247,30 @@ export async function getPersonalizedOpportunities(
       ministryLabel: scheme.ministry_label,
       category: scheme.category ?? 'general',
       jurisdiction: scheme.jurisdiction ?? 'state',
+      state: scheme.state ?? null,
       portalUrl: scheme.portal_url,
       shortDescription: scheme.short_description,
       benefitSummary: version.benefit_summary_en,
       versionId: version.id,
       versionNumber: version.version_number,
-      assessment,
+      assessment: {
+        ...assessment,
+        outcome: effectiveOutcome,
+      },
       documentReadiness: readiness,
       isSaved: savedSchemeIds.has(scheme.id),
       tags: scheme.tags ?? [],
     };
 
-    switch (assessment.outcome) {
+    switch (effectiveOutcome) {
       case 'likely_eligible':
         likelyEligible.push(opp);
         break;
       case 'needs_more_info':
-        needsMoreInfo.push(opp);
+        // Only include in needsMoreInfo if not a state mismatch
+        if (!isStateMismatch) {
+          needsMoreInfo.push(opp);
+        }
         break;
       case 'likely_ineligible':
         likelyIneligible.push(opp);

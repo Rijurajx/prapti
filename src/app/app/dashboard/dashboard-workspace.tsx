@@ -120,6 +120,7 @@ export function DashboardWorkspace({
   const [switchingProfileId, setSwitchingProfileId] = useState<string | null>(null);
   const [schemeSearchQuery, setSchemeSearchQuery] = useState('');
   const [schemeTagFilter, setSchemeTagFilter] = useState<string>('all');
+  const [schemeStateFilter, setSchemeStateFilter] = useState<string>('all');
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({
     overview: true,
     schemes: true,
@@ -170,8 +171,22 @@ export function DashboardWorkspace({
     setOpenCategories((prev) => ({ ...prev, [catId]: !prev[catId] }));
   };
 
+  const citizenState =
+    addresses?.find((a: any) => a.kind === 'current')?.state ??
+    addresses?.[0]?.state ??
+    null;
+
+  const readyToApply = opportunities.likelyEligible.filter((o) => o.documentReadiness.isFullyReady);
+  const actionRequiredDocs = opportunities.likelyEligible.filter((o) => !o.documentReadiness.isFullyReady);
+  const relevantNeedsInfo = opportunities.needsMoreInfo.filter(
+    (o) =>
+      o.jurisdiction === 'central' ||
+      !o.state ||
+      (citizenState && o.state.toLowerCase() === citizenState.toLowerCase())
+  );
+
   const eligibleCount = opportunities.likelyEligible.length;
-  const needsInfoCount = opportunities.needsMoreInfo.length;
+  const needsInfoCount = relevantNeedsInfo.length;
   const readyDocsCount = documentRows.filter((d) => d.status === 'available').length;
   const totalDocsCount = documentRows.length;
 
@@ -186,17 +201,31 @@ export function DashboardWorkspace({
       s.name_bn?.toLowerCase().includes(q) ||
       s.short_description?.toLowerCase().includes(q) ||
       s.ministry_label?.toLowerCase().includes(q) ||
+      s.state?.toLowerCase().includes(q) ||
       sTags.some((t: string) => t.toLowerCase().includes(q));
 
     if (!matchesSearch) return false;
 
+    // State / Jurisdiction filter
+    if (schemeStateFilter === 'central') {
+      if (s.jurisdiction !== 'central') return false;
+    } else if (schemeStateFilter !== 'all') {
+      if (!s.state || s.state.toLowerCase() !== schemeStateFilter.toLowerCase()) return false;
+    }
+
+    // Category / Tag filter
     if (schemeTagFilter === 'all') return true;
     if (schemeTagFilter === 'my_profile') {
       if (userCategoryTags.length === 0) return true;
       return sTags.some((t: string) => userCategoryTags.includes(t.toLowerCase()));
     }
-    if (schemeTagFilter === 'central') return s.jurisdiction === 'central';
-    if (schemeTagFilter === 'state') return s.jurisdiction === 'state';
+    if (schemeTagFilter === 'food')
+      return (
+        sTags.includes('food_security') ||
+        s.slug?.includes('annapurna') ||
+        s.name?.toLowerCase().includes('annapurna') ||
+        s.name?.toLowerCase().includes('khadya')
+      );
     if (schemeTagFilter === 'student')
       return s.category === 'education' || sTags.includes('student') || sTags.includes('scholarship');
     if (schemeTagFilter === 'women')
@@ -208,7 +237,16 @@ export function DashboardWorkspace({
     if (schemeTagFilter === 'farmer')
       return s.category === 'agriculture' || sTags.includes('farmer');
     if (schemeTagFilter === 'health')
-      return s.category === 'health' || sTags.includes('health');
+      return s.category === 'health' || sTags.includes('health') || sTags.includes('healthcare');
+    if (schemeTagFilter === 'livelihood')
+      return (
+        sTags.includes('employed') ||
+        sTags.includes('business') ||
+        sTags.includes('street_vendor') ||
+        sTags.includes('unemployed') ||
+        sTags.includes('self_employed') ||
+        s.category === 'livelihood'
+      );
 
     return true;
   });
@@ -223,7 +261,12 @@ export function DashboardWorkspace({
           id: 'opportunities',
           label: 'My Opportunities',
           icon: Sparkles,
-          badge: eligibleCount > 0 ? `${eligibleCount} ELIGIBLE` : undefined,
+          badge:
+            readyToApply.length > 0
+              ? `${readyToApply.length} READY`
+              : actionRequiredDocs.length > 0
+              ? `${actionRequiredDocs.length} ELIGIBLE`
+              : undefined,
           badgeTone: 'success',
         },
       ],
@@ -784,39 +827,121 @@ export function DashboardWorkspace({
                TAB: OPPORTUNITIES
             ========================================================================= */
             <div className="space-y-6 max-w-4xl">
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                  My Opportunities
-                </h1>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Evaluated using deterministic Kleene 3-valued logic against verified government scheme rules.
-                </p>
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground font-mono">
+                    My Opportunities
+                  </h1>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Direct matches for {activeCitizen.name} based on gender, state ({citizenState ?? 'All India'}), and profile category tags.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  {readyToApply.length > 0 && (
+                    <Badge tone="success">
+                      {readyToApply.length} Ready to Apply
+                    </Badge>
+                  )}
+                  {actionRequiredDocs.length > 0 && (
+                    <Badge tone="warning">
+                      {actionRequiredDocs.length} Need Documents
+                    </Badge>
+                  )}
+                </div>
               </div>
 
-              {opportunities.likelyEligible.length === 0 &&
-              opportunities.needsMoreInfo.length === 0 &&
-              opportunities.likelyIneligible.length === 0 ? (
-                <div className="rounded border border-border p-8 text-center space-y-3">
+              {readyToApply.length === 0 && actionRequiredDocs.length === 0 && relevantNeedsInfo.length === 0 ? (
+                <div className="rounded border border-border p-8 text-center space-y-3 bg-card">
                   <Sparkles className="mx-auto h-6 w-6 text-muted-foreground" />
-                  <p className="text-sm font-semibold">No scheme results yet</p>
+                  <p className="text-sm font-semibold text-foreground">No eligible scheme matches found yet</p>
                   <p className="text-xs text-muted-foreground max-w-md mx-auto">
-                    Add your educational marks, family income, and address in the Citizen Profile tabs to see matches.
+                    Ensure your address/state, category tags (e.g. Student, Widow, Farmer, Employed, SC/ST, Elder), and family income are up to date.
                   </p>
-                  <Button size="sm" onClick={() => switchTab('profile_personal')}>
-                    Update Profile
-                  </Button>
+                  <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                    <Button size="sm" onClick={() => switchTab('profile_tags')}>
+                      Select Category Tags
+                    </Button>
+                    <Button size="sm" variant="secondary" onClick={() => switchTab('profile_address')}>
+                      Set Location / State
+                    </Button>
+                  </div>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {opportunities.likelyEligible.map((opp) => (
-                    <OpportunityCard key={opp.schemeId} opportunity={opp} />
-                  ))}
-                  {opportunities.needsMoreInfo.map((opp) => (
-                    <OpportunityCard key={opp.schemeId} opportunity={opp} />
-                  ))}
-                  {opportunities.likelyIneligible.map((opp) => (
-                    <OpportunityCard key={opp.schemeId} opportunity={opp} />
-                  ))}
+                <div className="space-y-8">
+                  {/* Section 1: Ready to Apply */}
+                  {readyToApply.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between border-b border-border pb-2">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                          <h2 className="text-sm font-bold uppercase tracking-tight text-foreground font-mono">
+                            Directly Eligible & Ready to Apply ({readyToApply.length})
+                          </h2>
+                        </div>
+                        <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-bold">
+                          All Documents Ready
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        You meet all eligibility criteria and have all required documents available. You can apply on the official government portal immediately.
+                      </p>
+                      <div className="space-y-4">
+                        {readyToApply.map((opp) => (
+                          <OpportunityCard key={opp.schemeId} opportunity={opp} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Section 2: Action Required - Missing Documents */}
+                  {actionRequiredDocs.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between border-b border-border pb-2">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4 text-amber-600" />
+                          <h2 className="text-sm font-bold uppercase tracking-tight text-foreground font-mono">
+                            Eligible — Document Action Required ({actionRequiredDocs.length})
+                          </h2>
+                        </div>
+                        <span className="text-[11px] font-mono text-amber-700 dark:text-amber-400 font-bold">
+                          Procure Document to Avail
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        You satisfy all eligibility rules! You only need to obtain or upload the highlighted required document(s) to submit your claim.
+                      </p>
+                      <div className="space-y-4">
+                        {actionRequiredDocs.map((opp) => (
+                          <OpportunityCard key={opp.schemeId} opportunity={opp} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Section 3: Incomplete Profile Info (Only relevant to user) */}
+                  {relevantNeedsInfo.length > 0 && (
+                    <div className="space-y-3 pt-2">
+                      <div className="flex items-center justify-between border-b border-border pb-2">
+                        <div className="flex items-center gap-2">
+                          <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                          <h2 className="text-sm font-bold uppercase tracking-tight text-foreground font-mono">
+                            Complete Profile to Unlock More ({relevantNeedsInfo.length})
+                          </h2>
+                        </div>
+                        <span className="text-[11px] font-mono text-muted-foreground">
+                          Facts Missing
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Additional details (such as annual income or education stream) are needed to determine your eligibility.
+                      </p>
+                      <div className="space-y-4">
+                        {relevantNeedsInfo.map((opp) => (
+                          <OpportunityCard key={opp.schemeId} opportunity={opp} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -826,24 +951,24 @@ export function DashboardWorkspace({
             ========================================================================= */
             <div className="space-y-6 max-w-4xl">
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                  Scheme Registry ({filteredSchemes.length} of {schemes.length})
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground font-mono">
+                  All-India Scheme Registry ({filteredSchemes.length} of {schemes.length})
                 </h1>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Browse official Central and West Bengal welfare schemes and scholarships. Filter by demographic tags or your active profile.
+                  Browse official Central and State welfare schemes, scholarships, and entitlements across India. Filter by region, state, or demographic tags.
                 </p>
               </div>
 
-              {/* Search & Tag Filter Bar */}
+              {/* Search & State Filter Bar */}
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                     <input
                       type="text"
                       value={schemeSearchQuery}
                       onChange={(e) => setSchemeSearchQuery(e.target.value)}
-                      placeholder="Search schemes by name, keyword, tag (e.g. SC, scholarship, widow, farmer)..."
+                      placeholder="Search schemes across India by name, keyword, tag (e.g. Annapurna, scholarship, widow, farmer)..."
                       className="w-full rounded-[3px] border border-border bg-card pl-9 pr-8 py-2 text-xs font-mono text-foreground focus:outline-none focus:border-foreground"
                     />
                     {schemeSearchQuery && (
@@ -855,6 +980,27 @@ export function DashboardWorkspace({
                         <X className="h-4 w-4" />
                       </button>
                     )}
+                  </div>
+
+                  {/* State / Region Selector */}
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={schemeStateFilter}
+                      onChange={(e) => setSchemeStateFilter(e.target.value)}
+                      className="rounded-[3px] border border-border bg-card px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:border-foreground uppercase font-bold"
+                      aria-label="Filter by State or Jurisdiction"
+                    >
+                      <option value="all">ALL REGIONS (CENTRAL + STATES)</option>
+                      <option value="central">CENTRAL GOVT (ALL INDIA)</option>
+                      <option value="West Bengal">WEST BENGAL</option>
+                      <option value="Maharashtra">MAHARASHTRA</option>
+                      <option value="Rajasthan">RAJASTHAN (ANNAPURNA)</option>
+                      <option value="Karnataka">KARNATAKA</option>
+                      <option value="Tamil Nadu">TAMIL NADU</option>
+                      <option value="Delhi">DELHI (NCT)</option>
+                      <option value="Uttar Pradesh">UTTAR PRADESH</option>
+                      <option value="Telangana">TELANGANA</option>
+                    </select>
                   </div>
                 </div>
 
@@ -870,14 +1016,14 @@ export function DashboardWorkspace({
                           },
                         ]
                       : []),
+                    { id: 'food', label: 'Annapurna & Food Security' },
                     { id: 'student', label: 'Students & Scholarships' },
                     { id: 'women', label: 'Women & Widows' },
                     { id: 'pension', label: 'Elderly & Pensions' },
                     { id: 'caste', label: 'SC / ST / OBC' },
-                    { id: 'farmer', label: 'Farmers' },
+                    { id: 'farmer', label: 'Farmers & Agriculture' },
                     { id: 'health', label: 'Healthcare' },
-                    { id: 'central', label: 'Central Schemes' },
-                    { id: 'state', label: 'West Bengal' },
+                    { id: 'livelihood', label: 'Employed, MSME & Livelihood' },
                   ].map((chip) => {
                     const isSelected = schemeTagFilter === chip.id;
                     return (
@@ -900,18 +1046,19 @@ export function DashboardWorkspace({
 
               {filteredSchemes.length === 0 ? (
                 <div className="rounded border border-dashed border-border p-8 text-center text-xs space-y-2">
-                  <p className="font-bold text-foreground">No schemes found matching &quot;{schemeSearchQuery}&quot;</p>
-                  <p className="text-muted-foreground">Try clearing your search query or switching to &quot;All Schemes&quot;.</p>
+                  <p className="font-bold text-foreground">No schemes found matching the selected filters</p>
+                  <p className="text-muted-foreground">Try clearing your search query or changing state / category filters.</p>
                   <Button
                     variant="secondary"
                     size="sm"
                     onClick={() => {
                       setSchemeSearchQuery('');
                       setSchemeTagFilter('all');
+                      setSchemeStateFilter('all');
                     }}
                     className="mt-2 text-xs"
                   >
-                    Reset Filters
+                    Reset All Filters
                   </Button>
                 </div>
               ) : (
