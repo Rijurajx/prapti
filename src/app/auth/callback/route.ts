@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  const failure = `${origin}/auth/sign-in?error=callback`;
+  const failure = `${origin}/sign-in?error=callback`;
 
   if (!code) {
     return NextResponse.redirect(failure);
@@ -20,5 +20,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(failure);
   }
 
-  return NextResponse.redirect(`${origin}/app/dashboard`);
+  return NextResponse.redirect(`${origin}/dashboard`);
 }

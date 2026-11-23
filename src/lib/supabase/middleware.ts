@@ -3,10 +3,32 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { isSupabaseConfigured, publicEnv } from '@/lib/env';
 
 export async function updateSession(request: NextRequest) {
-  const isAppRoute = request.nextUrl.pathname.startsWith('/app');
+  const pathname = request.nextUrl.pathname;
+
+  const protectedPrefixes = [
+    '/dashboard',
+    '/schemes',
+    '/opportunities',
+    '/applications',
+    '/profile',
+    '/assistant',
+    '/household',
+    '/family',
+    '/reminders',
+    '/saved',
+    '/settings',
+    '/help',
+    '/guides',
+    '/admin',
+    '/app',
+  ];
+
+  const isProtectedRoute = protectedPrefixes.some(
+    (prefix) => pathname === prefix || pathname.startsWith(prefix + '/')
+  );
 
   if (!isSupabaseConfigured()) {
-    if (isAppRoute) {
+    if (isProtectedRoute) {
       const url = request.nextUrl.clone();
       url.pathname = '/config-required';
       return NextResponse.redirect(url);
@@ -41,9 +63,16 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (isAppRoute && !user) {
+  if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone();
-    url.pathname = '/auth/sign-in';
+    url.pathname = '/sign-in';
+    return NextResponse.redirect(url);
+  }
+
+  const authRoutes = ['/sign-in', '/sign-up', '/forgot-password'];
+  if (user && authRoutes.includes(pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/dashboard';
     return NextResponse.redirect(url);
   }
 

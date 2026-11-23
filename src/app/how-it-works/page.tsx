@@ -28,7 +28,7 @@ export default async function HowItWorksPage() {
           <div className="flex items-center gap-3">
             {user ? (
               <Link
-                href="/app/dashboard"
+                href="/dashboard"
                 className="bg-foreground text-background px-3 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-foreground/90 transition-colors"
               >
                 Dashboard →
@@ -36,13 +36,13 @@ export default async function HowItWorksPage() {
             ) : (
               <>
                 <Link
-                  href="/auth/sign-in"
+                  href="/sign-in"
                   className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground"
                 >
                   Sign In
                 </Link>
                 <Link
-                  href="/auth/sign-up"
+                  href="/sign-up"
                   className="bg-foreground text-background px-3 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-foreground/90 transition-colors"
                 >
                   Start Matching →
@@ -141,7 +141,7 @@ export default async function HowItWorksPage() {
             </p>
           </div>
           <Link
-            href="/auth/sign-up"
+            href="/sign-up"
             className="bg-foreground text-background px-4 py-2.5 text-xs font-bold uppercase tracking-wider hover:bg-foreground/90 transition-colors whitespace-nowrap"
           >
             Create Citizen Profile →

@@ -58,7 +58,7 @@ export default async function HomePage() {
           <div className="flex items-center gap-3">
             {user ? (
               <Link
-                href="/app/dashboard"
+                href="/dashboard"
                 className="rounded-[3px] bg-foreground px-4 py-2 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shadow-sm flex items-center gap-1.5"
               >
                 Dashboard →
@@ -66,13 +66,13 @@ export default async function HomePage() {
             ) : (
               <>
                 <Link
-                  href="/auth/sign-in"
+                  href="/sign-in"
                   className="text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground hidden sm:block"
                 >
                   Sign In
                 </Link>
                 <Link
-                  href="/auth/sign-up"
+                  href="/sign-up"
                   className="rounded-[3px] bg-foreground px-4 py-2 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shadow-sm"
                 >
                   Get Started
@@ -104,14 +104,14 @@ export default async function HomePage() {
               <div className="flex flex-wrap items-center gap-4 pt-2">
                 {user ? (
                   <Link
-                    href="/app/dashboard"
+                    href="/dashboard"
                     className="rounded-[3px] bg-foreground px-6 py-3 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shadow-sm inline-flex items-center gap-2"
                   >
                     Go to Dashboard →
                   </Link>
                 ) : (
                   <Link
-                    href="/auth/sign-up"
+                    href="/sign-up"
                     className="rounded-[3px] bg-foreground px-6 py-3 text-xs font-semibold uppercase tracking-wider text-background hover:bg-foreground/90 transition-all shadow-sm"
                   >
                     Get Started

@@ -65,13 +65,13 @@ export default async function PublicExplorePage({
 
           <div className="flex items-center gap-3">
             <Link
-              href="/auth/sign-in"
+              href="/sign-in"
               className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground"
             >
               Sign In
             </Link>
             <Link
-              href="/auth/sign-up"
+              href="/sign-up"
               className="bg-foreground text-background px-3 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-foreground/90 transition-colors"
             >
               Get Matched →
@@ -153,7 +153,7 @@ export default async function PublicExplorePage({
 
                   <div className="border-t border-border pt-2 flex items-center justify-between text-xs">
                     <Link
-                      href={`/app/schemes/${scheme.id}`}
+                      href={`/schemes/${scheme.id}`}
                       className="font-bold text-foreground hover:underline inline-flex items-center gap-1"
                     >
                       Check Eligibility Rules <ArrowRight className="h-3 w-3" />

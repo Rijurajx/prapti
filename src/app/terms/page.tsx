@@ -18,13 +18,13 @@ export default function TermsOfUsePage() {
 
           <div className="flex items-center gap-3">
             <Link
-              href="/auth/sign-in"
+              href="/sign-in"
               className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground"
             >
               Sign In
             </Link>
             <Link
-              href="/auth/sign-up"
+              href="/sign-up"
               className="bg-foreground text-background px-3 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-foreground/90 transition-colors"
             >
               Get Started →

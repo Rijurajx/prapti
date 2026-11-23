@@ -5,7 +5,7 @@ import { requireAdministrator } from '@/lib/admin/guard';
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const guard = await requireAdministrator();
   if (!guard.ok) {
-    redirect('/app/dashboard');
+    redirect('/dashboard');
   }
 
   return (

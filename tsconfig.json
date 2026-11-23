@@ -16,6 +16,7 @@
     "incremental": true,
     "plugins": [{ "name": "next" }],
     "paths": {
+      "@/app/*": ["./src/app/(app)/*", "./src/app/(auth)/*", "./src/app/*"],
       "@/*": ["./src/*"]
     }
   },
