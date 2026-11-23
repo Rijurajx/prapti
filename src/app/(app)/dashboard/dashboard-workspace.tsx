@@ -58,6 +58,7 @@ import { switchActiveProfile } from '@/app/family/actions';
 import { CategoryTagsSelector } from '@/app/profile/tags-selector';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageSwitcher } from '@/components/language-switcher';
+import { PraptiLogo } from '@/components/prapti-logo';
 import { useTranslation } from '@/lib/i18n/context';
 import type { PersonalizedOpportunities } from '@/services/matching';
 
@@ -323,7 +324,7 @@ export function DashboardWorkspace({
       id: 'ai',
       title: 'AI & GUIDANCE',
       items: [
-        { id: 'assistant', label: t('dashboard.aiAssistant'), icon: Bot, badge: 'GEMINI' },
+        { id: 'assistant', label: t('dashboard.aiAssistant'), icon: PraptiLogo, badge: 'GEMINI' },
         { id: 'guides', label: 'Certificate Guides', icon: BookOpen },
         { id: 'help', label: 'Helplines & FAQs', icon: HelpCircle },
       ],
@@ -407,9 +408,9 @@ export function DashboardWorkspace({
                 >
                   <span className="font-extrabold tracking-wide">{'//'} {cat.title}</span>
                   {isOpen ? (
-                    <ChevronDown className="h-3.5 w-3.5 stroke-[2.5]" />
+                    <ChevronDown className="h-3.5 w-3.5 stroke-[2.5] mr-1" />
                   ) : (
-                    <ChevronRight className="h-3.5 w-3.5 stroke-[2.5]" />
+                    <ChevronRight className="h-3.5 w-3.5 stroke-[2.5] mr-1" />
                   )}
                 </button>
 
@@ -528,7 +529,7 @@ export function DashboardWorkspace({
               <button
                 type="button"
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                className="bg-foreground text-background font-mono font-bold text-xs uppercase px-3 py-1.5 rounded-[3px] flex items-center gap-1.5 hover:bg-black transition-colors shadow-sm cursor-pointer border border-foreground"
+                className="bg-foreground text-background font-mono font-bold text-xs uppercase px-3 py-1.5 rounded-[3px] flex items-center gap-1.5 hover:bg-black/90 dark:hover:bg-white/90 dark:hover:text-black transition-colors shadow-sm cursor-pointer border border-foreground"
                 title="Switch Beneficiary Profile"
               >
                 <User className="h-3.5 w-3.5 shrink-0" />
@@ -1002,7 +1003,7 @@ export function DashboardWorkspace({
                     <select
                       value={schemeStateFilter}
                       onChange={(e) => setSchemeStateFilter(e.target.value)}
-                      className="rounded-[3px] border border-border bg-card px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:border-foreground uppercase font-bold"
+                      className="rounded-[3px] border border-border bg-card pl-3 pr-9 py-2 text-xs font-mono text-foreground focus:outline-none focus:border-foreground uppercase font-bold cursor-pointer"
                       aria-label="Filter by State or Jurisdiction"
                     >
                       <option value="all">ALL REGIONS (CENTRAL + STATES)</option>

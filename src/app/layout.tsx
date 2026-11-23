@@ -36,6 +36,11 @@ export const metadata: Metadata = {
   title: 'PRAPTI — Citizen Benefits AI Agent & Discovery Engine',
   description:
     'An intelligent, privacy-first citizen benefits companion for West Bengal and India. Profile-driven scheme matching with zero identity number collection.',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 };
 
 export default async function RootLayout({

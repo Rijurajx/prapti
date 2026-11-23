@@ -136,7 +136,7 @@ export function ExploreClientView({ initialSchemes }: ExploreClientViewProps) {
             <select
               value={selectedState}
               onChange={(e) => setSelectedState(e.target.value)}
-              className="rounded-[3px] border border-border bg-card px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:border-foreground uppercase font-bold"
+              className="rounded-[3px] border border-border bg-card pl-3 pr-9 py-2 text-xs font-mono text-foreground focus:outline-none focus:border-foreground uppercase font-bold cursor-pointer"
               aria-label="Filter by region or state"
             >
               <option value="all">ALL REGIONS (CENTRAL + 8 STATES)</option>

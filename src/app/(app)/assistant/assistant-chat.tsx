@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useRef, useEffect } from 'react';
+import { useState, useTransition, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Send,
@@ -9,16 +9,17 @@ import {
   AlertCircle,
   ArrowRight,
   User,
-  Bot,
   HelpCircle,
   ExternalLink,
   RefreshCw,
   ChevronDown,
   Layers,
   FileCheck2,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { PraptiLogo } from '@/components/prapti-logo';
 import {
   processAssistantMessage,
   confirmAndSaveFacts,
@@ -56,6 +57,86 @@ interface ChatMessage {
   suggestedFollowUps?: string[];
 }
 
+const STORAGE_PREFIX = 'prapti_chat_v1_';
+const MAX_STORED_MESSAGES = 25; // keep last 25 messages per citizen to conserve quota
+
+function getWelcomeMessage(activeCitizen: AssistantChatProps['activeCitizen']): ChatMessage {
+  return {
+    id: 'welcome',
+    sender: 'assistant',
+    text: `Hello! I am your **PRAPTI AI Benefits Companion**, loaded with complete context for **${activeCitizen?.name ?? 'Citizen'}** (${(activeCitizen?.relationship ?? 'self').toUpperCase()}).\n\n` +
+      `I know what documents you have ready, what criteria you meet, and which schemes you can apply for right now across Central & State governments.\n\n` +
+      `Ask me anything — for example:\n` +
+      `* *"What schemes am I eligible for?"*\n` +
+      `* *"Why am I not eligible for Swami Vivekananda Scholarship (SVMCM)?"*\n` +
+      `* *"What documents am I missing?"*\n` +
+      `* *"How can I get Annapurna / Ladki Bahin / PM-KISAN benefits?"*`,
+    suggestedFollowUps: [
+      'What schemes am I eligible for?',
+      'What documents am I missing?',
+      'Why am I not eligible for some schemes?',
+    ],
+  };
+}
+
+function loadStoredChat(citizenId: string, activeCitizen: AssistantChatProps['activeCitizen']): ChatMessage[] {
+  if (typeof window === 'undefined' || !citizenId) {
+    return [getWelcomeMessage(activeCitizen)];
+  }
+  try {
+    const raw = localStorage.getItem(STORAGE_PREFIX + citizenId);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch {
+    // Ignore storage parse issues
+  }
+  return [getWelcomeMessage(activeCitizen)];
+}
+
+function saveChatWithAutoPrune(citizenId: string, msgs: ChatMessage[]) {
+  if (typeof window === 'undefined' || !citizenId) return;
+  const key = STORAGE_PREFIX + citizenId;
+
+  // 1. Cap to MAX_STORED_MESSAGES (keep first welcome + recent messages)
+  let toSave = msgs;
+  if (toSave.length > MAX_STORED_MESSAGES) {
+    const first = toSave[0]!;
+    const recent = toSave.slice(-(MAX_STORED_MESSAGES - 1));
+    toSave = [first, ...recent];
+  }
+
+  // 2. Try saving; if localStorage is getting full (QuotaExceededError), automatically prune older chats
+  try {
+    localStorage.setItem(key, JSON.stringify(toSave));
+  } catch {
+    console.warn('[AI Chat Storage] Quota limit encountered. Automatically pruning older chats to free storage...');
+    try {
+      // Aggressively prune to recent 10 messages
+      toSave = [toSave[0]!, ...toSave.slice(-10)];
+      localStorage.setItem(key, JSON.stringify(toSave));
+    } catch {
+      // If still failing, purge older chat history of other citizens to free quota
+      try {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith(STORAGE_PREFIX) && k !== key) {
+            keysToRemove.push(k);
+          }
+        }
+        keysToRemove.forEach((k) => localStorage.removeItem(k));
+        localStorage.setItem(key, JSON.stringify(toSave));
+      } catch {
+        // Storage genuinely blocked, continue in-memory safely
+      }
+    }
+  }
+}
+
 export function AssistantChat({
   activeCitizen = { id: '', name: 'Citizen', relationship: 'self', categoryTags: [] },
   familyMembers = [],
@@ -65,24 +146,9 @@ export function AssistantChat({
   totalDocsCount = 0,
   onSwitchProfile,
 }: AssistantChatProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>(() => [
-    {
-      id: 'welcome',
-      sender: 'assistant',
-      text: `Hello! I am your **PRAPTI AI Benefits Companion**, loaded with complete context for **${activeCitizen.name}** (${activeCitizen.relationship.toUpperCase()}).\n\n` +
-        `I know what documents you have ready, what criteria you meet, and which schemes you can apply for right now across Central & State governments.\n\n` +
-        `Ask me anything — for example:\n` +
-        `* *"What schemes am I eligible for?"*\n` +
-        `* *"Why am I not eligible for Swami Vivekananda Scholarship (SVMCM)?"*\n` +
-        `* *"What documents am I missing?"*\n` +
-        `* *"How can I get Annapurna / Ladki Bahin / PM-KISAN benefits?"*`,
-      suggestedFollowUps: [
-        'What schemes am I eligible for?',
-        'What documents am I missing?',
-        'Why am I not eligible for some schemes?',
-      ],
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() =>
+    loadStoredChat(activeCitizen.id, activeCitizen),
+  );
 
   const [input, setInput] = useState('');
   const [isPending, startTransition] = useTransition();
@@ -90,28 +156,28 @@ export function AssistantChat({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const currentCitizenIdRef = useRef<string>(activeCitizen.id);
 
-  // When active citizen switches, notify the chat context
+  // Auto-save to localStorage whenever messages change
+  useEffect(() => {
+    if (activeCitizen.id) {
+      saveChatWithAutoPrune(activeCitizen.id, messages);
+    }
+  }, [messages, activeCitizen.id]);
+
+  // When active citizen switches, load their stored history or reset context
   useEffect(() => {
     if (currentCitizenIdRef.current !== activeCitizen.id) {
       currentCitizenIdRef.current = activeCitizen.id;
-      const switchId = Date.now().toString();
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: switchId,
-          sender: 'system',
-          text: `🔄 Switched context to **${activeCitizen.name}** (${activeCitizen.relationship.toUpperCase()}). Active schemes and document evaluation reloaded.`,
-        },
-        {
-          id: (Date.now() + 1).toString(),
-          sender: 'assistant',
-          text: `I am now ready to assist **${activeCitizen.name}** (${activeCitizen.relationship.toUpperCase()}). ` +
-            `This profile has **${eligibleCount} eligible schemes** and **${readyDocsCount}/${totalDocsCount} documents ready**. How can I help?`,
-          suggestedFollowUps: getDynamicStarterPrompts(activeCitizen),
-        },
-      ]);
+      const stored = loadStoredChat(activeCitizen.id, activeCitizen);
+
+      const switchNotice: ChatMessage = {
+        id: Date.now().toString(),
+        sender: 'system',
+        text: `🔄 Switched context to **${activeCitizen.name}** (${activeCitizen.relationship.toUpperCase()}). Active schemes and document evaluation reloaded.`,
+      };
+
+      setMessages([...stored, switchNotice]);
     }
-  }, [activeCitizen, eligibleCount, readyDocsCount, totalDocsCount]);
+  }, [activeCitizen]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -121,6 +187,14 @@ export function AssistantChat({
     scrollToBottom();
   }, [messages, isPending]);
 
+  const handleClearChat = useCallback(() => {
+    if (!window.confirm(`Clear chat history for ${activeCitizen.name}?`)) return;
+    try {
+      localStorage.removeItem(STORAGE_PREFIX + activeCitizen.id);
+    } catch {}
+    setMessages([getWelcomeMessage(activeCitizen)]);
+  }, [activeCitizen]);
+
   const handleSend = (textToSend?: string) => {
     const text = (textToSend ?? input).trim();
     if (!text || isPending) return;
@@ -129,7 +203,7 @@ export function AssistantChat({
     setMessages((prev) => [...prev, { id: userMsgId, sender: 'user', text }]);
     setInput('');
 
-    // Prepare history
+    // Prepare history for LLM
     const history = messages
       .filter((m) => m.sender === 'user' || m.sender === 'assistant')
       .slice(-6)
@@ -244,12 +318,12 @@ export function AssistantChat({
       {/* Telemetry Header Bar: Shows Active Beneficiary Profile & Document Stats */}
       <div className="border-b border-border bg-muted/40 px-4 py-2.5 flex flex-wrap items-center justify-between gap-2.5 text-xs">
         <div className="flex flex-wrap items-center gap-2">
-          {/* Active Beneficiary Solid Black Badge */}
+          {/* Active Beneficiary Solid Black/White Badge with Non-Disappearing Hover */}
           <div className="relative">
             <button
               type="button"
               onClick={() => setMemberDropdownOpen(!memberDropdownOpen)}
-              className="bg-foreground text-background font-mono font-bold text-[11px] uppercase px-2.5 py-1 rounded-[3px] flex items-center gap-1.5 hover:bg-foreground/90 transition-colors shadow-sm cursor-pointer"
+              className="bg-foreground text-background font-mono font-bold text-[11px] uppercase px-2.5 py-1 rounded-[3px] flex items-center gap-1.5 hover:bg-black/90 dark:hover:bg-white/90 dark:hover:text-black transition-colors shadow-sm cursor-pointer border border-foreground"
               title="Switch Active Beneficiary Context"
             >
               <User className="h-3 w-3 shrink-0" />
@@ -265,7 +339,7 @@ export function AssistantChat({
                   className="fixed inset-0 z-40"
                   onClick={() => setMemberDropdownOpen(false)}
                 />
-                <div className="absolute left-0 top-full mt-1.5 w-64 rounded-md border border-border bg-popover p-1.5 shadow-lg z-50 text-xs">
+                <div className="absolute left-0 top-full mt-1.5 w-64 rounded-md border border-border bg-popover p-1.5 shadow-lg z-50 text-xs font-mono">
                   <div className="px-2 py-1 text-[10px] uppercase font-bold text-muted-foreground border-b border-border mb-1">
                     Switch Beneficiary Context
                   </div>
@@ -312,7 +386,7 @@ export function AssistantChat({
           )}
         </div>
 
-        {/* Live Metrics Telemetry */}
+        {/* Live Metrics Telemetry & Clear History Button */}
         <div className="flex items-center gap-2 text-[11px] font-mono">
           <div className="inline-flex items-center gap-1 rounded border border-border bg-card px-2 py-0.5">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -324,6 +398,15 @@ export function AssistantChat({
             <span className="text-foreground font-bold">{readyDocsCount}/{totalDocsCount}</span>
             <span className="text-muted-foreground">Docs Ready</span>
           </div>
+          <button
+            type="button"
+            onClick={handleClearChat}
+            className="text-muted-foreground hover:text-foreground text-[10px] font-mono uppercase px-2 py-0.5 rounded border border-border bg-card flex items-center gap-1 hover:border-foreground transition-colors cursor-pointer"
+            title="Reset conversation history for this member"
+          >
+            <Trash2 className="h-3 w-3" />
+            <span className="hidden sm:inline">Reset</span>
+          </button>
         </div>
       </div>
 
@@ -348,8 +431,8 @@ export function AssistantChat({
               }`}
             >
               {msg.sender === 'assistant' && (
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground text-background">
-                  <Bot className="h-3.5 w-3.5" />
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[3px] bg-foreground text-background">
+                  <PraptiLogo className="h-3.5 w-3.5" />
                 </div>
               )}
 
@@ -514,8 +597,8 @@ export function AssistantChat({
 
         {isPending && (
           <div className="flex gap-3 justify-start">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground text-background animate-pulse">
-              <Bot className="h-3.5 w-3.5" />
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[3px] bg-foreground text-background animate-pulse">
+              <PraptiLogo className="h-3.5 w-3.5" />
             </div>
             <div className="rounded-lg bg-muted/40 border border-border/80 p-3 text-xs text-muted-foreground flex items-center gap-2 font-mono">
               <RefreshCw className="h-3.5 w-3.5 animate-spin text-primary" />
