@@ -41,9 +41,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('prapti-theme');
+                  var supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  if (theme === 'dark' || (!theme && supportDarkMode)) {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body
-        className={`${inter.variable} ${spaceMono.variable} ${silkscreen.variable} ${notoBengali.variable} bg-background text-foreground antialiased font-mono selection:bg-black selection:text-white`}
+        className={`${inter.variable} ${spaceMono.variable} ${silkscreen.variable} ${notoBengali.variable} bg-background text-foreground antialiased font-mono selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black`}
       >
         {children}
       </body>

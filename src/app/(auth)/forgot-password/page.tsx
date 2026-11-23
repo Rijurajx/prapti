@@ -10,6 +10,7 @@ import {
 } from '@/lib/validation/auth';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { t } from '@/lib/i18n/messages';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function ForgotPasswordPage() {
   const [serverError, setServerError] = useState<string | null>(null);
@@ -44,16 +45,19 @@ export default function ForgotPasswordPage() {
     <main className="min-h-screen bg-background text-foreground font-mono flex flex-col justify-center items-center px-4 py-12">
       <div className="w-full max-w-md border border-border bg-card p-6 sm:p-8 space-y-6">
         {/* Brand header */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="inline-block h-3 w-3 bg-foreground" />
-            <Link href="/" className="font-pixel text-lg font-bold tracking-tight text-foreground">
-              PRAPTI
-            </Link>
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="inline-block h-3 w-3 bg-foreground" />
+              <Link href="/" className="font-mono text-lg font-bold tracking-tight text-foreground">
+                PRAPTI
+              </Link>
+            </div>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">
+              {'//'} Account Access Recovery
+            </p>
           </div>
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">
-            {'//'} Account Access Recovery
-          </p>
+          <ThemeToggle />
         </div>
 
         <div>

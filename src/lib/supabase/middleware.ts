@@ -26,6 +26,13 @@ export async function updateSession(request: NextRequest) {
   const isProtectedRoute = protectedPrefixes.some(
     (prefix) => pathname === prefix || pathname.startsWith(prefix + '/')
   );
+  const authRoutes = ['/sign-in', '/sign-up', '/forgot-password'];
+  const isAuthRoute = authRoutes.includes(pathname);
+
+  // For public static/marketing pages, return immediately with zero network latency
+  if (!isProtectedRoute && !isAuthRoute) {
+    return NextResponse.next({ request });
+  }
 
   if (!isSupabaseConfigured()) {
     if (isProtectedRoute) {
@@ -33,6 +40,21 @@ export async function updateSession(request: NextRequest) {
       url.pathname = '/config-required';
       return NextResponse.redirect(url);
     }
+    return NextResponse.next({ request });
+  }
+
+  const allCookies = request.cookies.getAll();
+  const hasAuthCookie = allCookies.some((c) => c.name.includes('-auth-token'));
+
+  // Fast path: if unauthenticated on protected route, redirect to /sign-in immediately
+  if (isProtectedRoute && !hasAuthCookie) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/sign-in';
+    return NextResponse.redirect(url);
+  }
+
+  // Fast path: if unauthenticated on auth route, allow access immediately
+  if (isAuthRoute && !hasAuthCookie) {
     return NextResponse.next({ request });
   }
 
@@ -69,8 +91,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  const authRoutes = ['/sign-in', '/sign-up', '/forgot-password'];
-  if (user && authRoutes.includes(pathname)) {
+  if (user && isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
     return NextResponse.redirect(url);

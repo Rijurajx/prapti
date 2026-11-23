@@ -56,6 +56,7 @@ import { updateUserSettings } from '@/app/settings/actions';
 import { FamilyMembersView, type FamilyMemberItem } from '@/app/family/family-members-view';
 import { switchActiveProfile } from '@/app/family/actions';
 import { CategoryTagsSelector } from '@/app/profile/tags-selector';
+import { ThemeToggle } from '@/components/theme-toggle';
 import type { PersonalizedOpportunities } from '@/services/matching';
 
 interface NavSubItem {
@@ -472,9 +473,9 @@ export function DashboardWorkspace({
             <form action={signOut}>
               <button
                 type="submit"
-                className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-rose-600 transition-colors"
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 transition-colors"
               >
-                <LogOut className="h-3 w-3" /> Sign Out
+                <LogOut className="h-3 w-3 text-rose-600 dark:text-rose-400" /> Sign Out
               </button>
             </form>
           </div>
@@ -600,9 +601,16 @@ export function DashboardWorkspace({
               )}
             </div>
 
+            <ThemeToggle />
+
             <form action={signOut}>
-              <Button type="submit" variant="ghost" size="sm" className="h-8 text-xs">
-                <LogOut className="h-3.5 w-3.5 sm:mr-1" />
+              <Button
+                type="submit"
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-950/40"
+              >
+                <LogOut className="h-3.5 w-3.5 sm:mr-1 text-rose-600 dark:text-rose-400" />
                 <span className="hidden sm:inline">Sign Out</span>
               </Button>
             </form>

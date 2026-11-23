@@ -1,14 +1,15 @@
 import Link from 'next/link';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function PublicPrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground font-mono flex flex-col">
+    <div className="min-h-screen bg-background text-foreground font-mono flex flex-col selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black">
       {/* Top Navbar */}
-      <header className="border-b border-border bg-card">
+      <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2">
             <span className="inline-block h-3 w-3 bg-foreground" />
-            <Link href="/" className="font-pixel text-sm font-bold tracking-tight text-foreground">
+            <Link href="/" className="font-mono text-base font-bold tracking-tight text-foreground">
               PRAPTI
             </Link>
             <span className="text-[10px] text-muted-foreground ml-2 uppercase hidden sm:inline">
@@ -16,7 +17,8 @@ export default function PublicPrivacyPolicyPage() {
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            <ThemeToggle />
             <Link
               href="/sign-in"
               className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground"
@@ -25,7 +27,7 @@ export default function PublicPrivacyPolicyPage() {
             </Link>
             <Link
               href="/sign-up"
-              className="bg-foreground text-background px-3 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-foreground/90 transition-colors"
+              className="bg-foreground text-background px-3 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-foreground/90 transition-colors rounded-[3px]"
             >
               Get Started →
             </Link>
